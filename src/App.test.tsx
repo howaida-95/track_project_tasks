@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import App from '@/App.tsx'
+import BoardPlaceholder from '@/features/tasks/views/BoardPlaceholder.tsx'
 import { renderWithProviders } from '@/test/renderWithProviders.tsx'
 
-describe('App', () => {
-  it('renders without crashing', () => {
-    const { getByText } = renderWithProviders(<App />)
+describe('BoardPlaceholder', () => {
+  it('renders the board heading', () => {
+    const { getByRole } = renderWithProviders(<BoardPlaceholder />)
 
-    expect(getByText('APP')).toBeInTheDocument()
+    expect(getByRole('heading', { name: 'Task Board' })).toBeInTheDocument()
   })
 })
