@@ -3,7 +3,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import RootLayout from '@/app/layouts/RootLayout.tsx'
 import NotFound from '@/app/layouts/NotFound.tsx'
 import { paths } from '@/app/routes/paths.ts'
-import BoardPlaceholder from '@/features/tasks/views/BoardPlaceholder.tsx'
+import BoardView from '@/features/tasks/views/BoardView.tsx'
 import ListPlaceholder from '@/features/tasks/views/ListPlaceholder.tsx'
 
 export const router = createBrowserRouter([
@@ -16,7 +16,7 @@ export const router = createBrowserRouter([
       },
       {
         path: paths.board,
-        element: <BoardPlaceholder />,
+        element: <BoardView />,
       },
       {
         path: paths.list,

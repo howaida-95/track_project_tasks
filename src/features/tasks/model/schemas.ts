@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+import type { CreateTaskInput, Task } from '@/features/tasks/model/types.ts'
 import { toTaskId } from '@/shared/types/branded.ts'
 import { TASK_PRIORITIES, TASK_STATUSES } from '@/shared/types/task-ui.ts'
 
@@ -60,3 +61,43 @@ export const ApiProblemSchema = z.object({
   status: z.number().int(),
   details: z.record(z.array(z.string())).optional(),
 })
+
+export const TaskFormSchema = z.object({
+  title: z.string().trim().min(1, 'Title is required').max(200),
+  description: z.string().max(5000),
+  status: z.enum(TASK_STATUSES),
+  priority: z.enum(TASK_PRIORITIES),
+  dueDate: z.union([z.string().date(), z.literal('')]),
+})
+
+export type TaskFormValues = z.infer<typeof TaskFormSchema>
+
+export function toCreateTaskInput(values: TaskFormValues): CreateTaskInput {
+  return {
+    title: values.title,
+    description: values.description,
+    status: values.status,
+    priority: values.priority,
+    dueDate: values.dueDate === '' ? null : values.dueDate,
+  }
+}
+
+export function toTaskFormValues(overrides: Partial<TaskFormValues> = {}): TaskFormValues {
+  return {
+    title: overrides.title ?? '',
+    description: overrides.description ?? '',
+    status: overrides.status ?? 'todo',
+    priority: overrides.priority ?? 'medium',
+    dueDate: overrides.dueDate ?? '',
+  }
+}
+
+export function taskToFormValues(task: Task): TaskFormValues {
+  return toTaskFormValues({
+    title: task.title,
+    description: task.description,
+    status: task.status,
+    priority: task.priority,
+    dueDate: task.dueDate ?? '',
+  })
+}
