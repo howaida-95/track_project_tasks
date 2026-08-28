@@ -1,0 +1,129 @@
+import type {
+  PaginatedTasks,
+  PaginationParams,
+  Task,
+  TaskFilters,
+  TaskListParams,
+  TaskSortField,
+} from '@/features/tasks/model/types.ts'
+import type { TaskPriority } from '@/shared/types/task-ui.ts'
+
+const PRIORITY_RANK: Record<TaskPriority, number> = {
+  low: 1,
+  medium: 2,
+  high: 3,
+  urgent: 4,
+}
+
+function compareStrings(a: string, b: string, order: 'asc' | 'desc'): number {
+  const result = a.localeCompare(b, undefined, { sensitivity: 'base' })
+  return order === 'asc' ? result : -result
+}
+
+function compareNullableDates(a: string | null, b: string | null, order: 'asc' | 'desc'): number {
+  if (a === null && b === null) {
+    return 0
+  }
+
+  if (a === null) {
+    return order === 'asc' ? 1 : -1
+  }
+
+  if (b === null) {
+    return order === 'asc' ? -1 : 1
+  }
+
+  const result = a.localeCompare(b)
+  return order === 'asc' ? result : -result
+}
+
+export function filterTasks(tasks: Task[], filters: TaskFilters): Task[] {
+  const query = filters.q?.trim().toLowerCase()
+
+  return tasks.filter((task) => {
+    if (query) {
+      const haystack = `${task.title} ${task.description} ${task.tags.join(' ')}`.toLowerCase()
+      if (!haystack.includes(query)) {
+        return false
+      }
+    }
+
+    if (filters.status?.length && !filters.status.includes(task.status)) {
+      return false
+    }
+
+    if (filters.priority?.length && !filters.priority.includes(task.priority)) {
+      return false
+    }
+
+    if (filters.from || filters.to) {
+      if (!task.dueDate) {
+        return false
+      }
+
+      if (filters.from && task.dueDate < filters.from) {
+        return false
+      }
+
+      if (filters.to && task.dueDate > filters.to) {
+        return false
+      }
+    }
+
+    return true
+  })
+}
+
+export function sortTasks(
+  tasks: Task[],
+  sort: TaskSortField = 'createdAt',
+  order: 'asc' | 'desc' = 'desc',
+): Task[] {
+  const sorted = [...tasks]
+
+  sorted.sort((left, right) => {
+    switch (sort) {
+      case 'title':
+        return compareStrings(left.title, right.title, order)
+      case 'dueDate':
+        return compareNullableDates(left.dueDate, right.dueDate, order)
+      case 'priority':
+        return order === 'asc'
+          ? PRIORITY_RANK[left.priority] - PRIORITY_RANK[right.priority]
+          : PRIORITY_RANK[right.priority] - PRIORITY_RANK[left.priority]
+      case 'updatedAt':
+        return compareStrings(left.updatedAt, right.updatedAt, order)
+      case 'createdAt':
+      default:
+        return compareStrings(left.createdAt, right.createdAt, order)
+    }
+  })
+
+  return sorted
+}
+
+export function paginateTasks(
+  tasks: Task[],
+  { page = 1, limit = 50 }: PaginationParams,
+): PaginatedTasks {
+  const total = tasks.length
+  const totalPages = total === 0 ? 0 : Math.ceil(total / limit)
+  const safePage = totalPages === 0 ? 1 : Math.min(page, totalPages)
+  const start = (safePage - 1) * limit
+
+  return {
+    data: tasks.slice(start, start + limit),
+    meta: {
+      total,
+      page: safePage,
+      limit,
+      totalPages,
+    },
+  }
+}
+
+export function queryTasks(tasks: Task[], params: TaskListParams): PaginatedTasks {
+  const filtered = filterTasks(tasks, params)
+  const sorted = sortTasks(filtered, params.sort, params.order)
+  return paginateTasks(sorted, params)
+}
