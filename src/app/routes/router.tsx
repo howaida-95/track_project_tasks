@@ -1,10 +1,12 @@
+import { Suspense } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 
+import BoardLayout from '@/app/layouts/BoardLayout.tsx'
 import RootLayout from '@/app/layouts/RootLayout.tsx'
 import NotFound from '@/app/layouts/NotFound.tsx'
+import { LegacyTasksRedirect } from '@/app/routes/LegacyTasksRedirect.tsx'
+import { RouteFallback } from '@/app/routes/RouteFallback.tsx'
 import { paths } from '@/app/routes/paths.ts'
-import BoardView from '@/features/tasks/views/BoardView.tsx'
-import ListPlaceholder from '@/features/tasks/views/ListPlaceholder.tsx'
 
 export const router = createBrowserRouter([
   {
@@ -12,15 +14,23 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to={paths.board} replace />,
+        element: <Navigate to={paths.tasks} replace />,
       },
       {
-        path: paths.board,
-        element: <BoardView />,
+        path: paths.tasks,
+        element: (
+          <Suspense fallback={<RouteFallback />}>
+            <BoardLayout />
+          </Suspense>
+        ),
       },
       {
-        path: paths.list,
-        element: <ListPlaceholder />,
+        path: '/board',
+        element: <LegacyTasksRedirect />,
+      },
+      {
+        path: '/list',
+        element: <LegacyTasksRedirect view="list" />,
       },
       {
         path: '*',

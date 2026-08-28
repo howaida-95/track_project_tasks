@@ -1,12 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom'
-
-import { paths } from '@/app/routes/paths.ts'
-import { cn } from '@/lib/utils'
-
-const navItems = [
-  { to: paths.board, label: 'Board' },
-  { to: paths.list, label: 'List' },
-] as const
+import { Outlet } from 'react-router-dom'
 
 export function RootLayout() {
   return (
@@ -29,31 +21,10 @@ export function RootLayout() {
         </div>
       </header>
 
-      <nav className="border-b border-border bg-background" aria-label="Primary navigation">
-        <div className="mx-auto flex max-w-7xl gap-1 px-4 sm:px-6">
-          {navItems.map(({ to, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                cn(
-                  'inline-flex h-10 items-center border-b-2 px-3 text-sm font-medium transition-colors',
-                  isActive
-                    ? 'border-brand-500 text-foreground'
-                    : 'border-transparent text-muted-foreground hover:text-foreground',
-                )
-              }
-            >
-              {label}
-            </NavLink>
-          ))}
-        </div>
-      </nav>
-
       <main
         id="main-content"
         tabIndex={-1}
-        className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col overflow-y-auto px-4 py-6 sm:px-6"
+        className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col overflow-hidden px-4 py-6 sm:px-6"
       >
         <Outlet />
       </main>
