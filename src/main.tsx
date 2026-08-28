@@ -5,8 +5,19 @@ import AppProviders from '@/app/providers/AppProviders.tsx'
 
 import './styles/index.css'
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <AppProviders />
-  </StrictMode>,
-)
+async function enableMocking(): Promise<void> {
+  if (import.meta.env.VITE_ENABLE_MOCKS !== 'true') {
+    return
+  }
+
+  const { startMockWorker } = await import('@/mocks/browser.ts')
+  await startMockWorker()
+}
+
+void enableMocking().then(() => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <AppProviders />
+    </StrictMode>,
+  )
+})

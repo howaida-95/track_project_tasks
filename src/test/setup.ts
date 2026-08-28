@@ -1,19 +1,19 @@
 import '@testing-library/jest-dom/vitest'
 import { afterAll, afterEach, beforeAll } from 'vitest'
 
-// MSW server lifecycle — wired in feat/mock-api
-// import { setupServer } from 'msw/node'
-// import { handlers } from '@/mocks/handlers'
-// export const server = setupServer(...handlers)
+import { resetTaskStore } from '@/mocks/db/task-repository.ts'
+import { server } from '@/mocks/server.ts'
 
 beforeAll(() => {
-  // server.listen({ onUnhandledRequest: 'error' })
+  server.listen({ onUnhandledRequest: 'error' })
 })
 
 afterEach(() => {
-  // server.resetHandlers()
+  server.resetHandlers()
+  localStorage.clear()
+  resetTaskStore()
 })
 
 afterAll(() => {
-  // server.close()
+  server.close()
 })
