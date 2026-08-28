@@ -10,7 +10,7 @@ const navItems = [
 
 export function RootLayout() {
   return (
-    <div className="min-h-dvh bg-background text-foreground">
+    <div className="flex h-dvh flex-col overflow-hidden bg-background text-foreground">
       <a href="#main-content" className="skip-link">
         Skip to main content
       </a>
@@ -50,7 +50,11 @@ export function RootLayout() {
         </div>
       </nav>
 
-      <main id="main-content" tabIndex={-1} className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col overflow-y-auto px-4 py-6 sm:px-6"
+      >
         <Outlet />
       </main>
     </div>

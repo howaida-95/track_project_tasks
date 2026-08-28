@@ -52,8 +52,8 @@ export function BoardView() {
   )
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-center justify-between gap-3">
+    <div className="flex h-[calc(100dvh-9rem)] flex-col overflow-hidden">
+      <header className="mb-4 flex shrink-0 flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Task Board</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -65,51 +65,62 @@ export function BoardView() {
         </Button>
       </header>
 
-      <QueryState
-        isLoading={isLoading}
-        isError={isError}
-        isEmpty={!isLoading && !isError && (data?.data.length ?? 0) === 0}
-        error={error}
-        onRetry={() => {
-          void refetch()
-        }}
-      >
-        <div className="grid gap-4 xl:grid-cols-4 md:grid-cols-2">
-          {TASK_STATUSES.map((status) => (
-            <section
-              key={status}
-              aria-labelledby={`column-${status}`}
-              className="rounded-card border border-border bg-muted/20 p-3"
-            >
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <h2
-                  id={`column-${status}`}
-                  className="text-sm font-semibold uppercase tracking-wide text-muted-foreground"
-                >
-                  {TASK_STATUS_LABELS[status]}
-                </h2>
-                <span className="text-xs text-muted-foreground">
-                  {tasksByStatus[status].length}
-                </span>
-              </div>
-              <div className="space-y-3">
-                {tasksByStatus[status].map((task) => (
-                  <TaskCard key={task.id} task={task} onEdit={handleEdit} onDelete={handleDelete} />
-                ))}
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="mt-3 w-full"
-                onClick={() => openCreate(status)}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <QueryState
+          isLoading={isLoading}
+          isError={isError}
+          isEmpty={!isLoading && !isError && (data?.data.length ?? 0) === 0}
+          error={error}
+          onRetry={() => {
+            void refetch()
+          }}
+        >
+          <div className="flex h-full min-h-0 flex-1 gap-4 overflow-x-auto overflow-y-hidden xl:overflow-x-hidden">
+            {TASK_STATUSES.map((status) => (
+              <section
+                key={status}
+                aria-labelledby={`column-${status}`}
+                className="flex h-full min-h-0 w-72 shrink-0 flex-col overflow-hidden rounded-card border border-border bg-muted/20 p-3 md:w-auto md:min-w-0 md:flex-1"
               >
-                Add task
-              </Button>
-            </section>
-          ))}
-        </div>
-      </QueryState>
+                <div className="mb-3 flex shrink-0 items-center justify-between gap-2">
+                  <h2
+                    id={`column-${status}`}
+                    className="text-sm font-semibold uppercase tracking-wide text-muted-foreground"
+                  >
+                    {TASK_STATUS_LABELS[status]}
+                  </h2>
+                  <span className="text-xs text-muted-foreground">
+                    {tasksByStatus[status].length}
+                  </span>
+                </div>
+
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
+                  <div className="space-y-3">
+                    {tasksByStatus[status].map((task) => (
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="mt-3 w-full shrink-0"
+                  onClick={() => openCreate(status)}
+                >
+                  Add task
+                </Button>
+              </section>
+            ))}
+          </div>
+        </QueryState>
+      </div>
 
       <TaskDialogsHost />
     </div>
