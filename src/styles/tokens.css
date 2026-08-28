@@ -1,0 +1,19 @@
+/* Domain design tokens — extend in feat/design-system (IMPLEMENTATION_PLAN §7) */
+
+@theme {
+  --color-brand-500: oklch(0.62 0.19 258);
+
+  --color-status-todo: oklch(0.72 0.03 260);
+  --color-status-in-progress: oklch(0.75 0.14 85);
+  --color-status-in-review: oklch(0.68 0.15 300);
+  --color-status-done: oklch(0.7 0.15 155);
+
+  --color-priority-low: oklch(0.75 0.05 260);
+  --color-priority-medium: oklch(0.72 0.12 85);
+  --color-priority-high: oklch(0.65 0.16 45);
+  --color-priority-urgent: oklch(0.6 0.21 25);
+
+  --radius-card: 0.75rem;
+  --shadow-card: 0 1px 2px oklch(0 0 0 / 0.08);
+  --spacing-column: 20rem;
+}
