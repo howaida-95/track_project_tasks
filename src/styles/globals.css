@@ -1,4 +1,4 @@
-/* Base resets and accessibility defaults — extend in feat/design-system */
+/* Base resets and accessibility defaults */
 
 @layer base {
   *,
@@ -9,6 +9,10 @@
 
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-ring;
+  }
+
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground focus:shadow-md;
   }
 
   @media (prefers-reduced-motion: reduce) {

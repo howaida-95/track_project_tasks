@@ -1,14 +1,14 @@
 @import 'tailwindcss';
-@import './styles/tokens.css';
-@import './styles/globals.css';
+@import './tokens.css';
+@import './globals.css';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 @import '@fontsource-variable/geist';
 
 @custom-variant dark (&:is(.dark *));
 
-@source "../index.html";
-@source "../src/**/*.{js,ts,jsx,tsx}";
+@source "../../index.html";
+@source "../../src/**/*.{js,ts,jsx,tsx}";
 
 @theme inline {
   --font-heading: var(--font-sans);
