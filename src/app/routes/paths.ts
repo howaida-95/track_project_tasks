@@ -1,7 +1,6 @@
 export const paths = {
   home: '/',
-  board: '/board',
-  list: '/list',
+  tasks: '/tasks',
   analytics: '/analytics',
-  taskDetail: (taskId: string) => `/board/tasks/${taskId}` as const,
+  taskDetail: (taskId: string) => `/tasks/${taskId}` as const,
 } as const

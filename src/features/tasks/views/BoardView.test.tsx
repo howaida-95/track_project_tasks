@@ -14,7 +14,9 @@ describe('BoardView', () => {
       makeTask({ title: 'Board task beta', status: 'done' }),
     ])
 
-    renderWithProviders(<BoardView />)
+    renderWithProviders(<BoardView />, {
+      router: { initialEntries: ['/tasks'] },
+    })
 
     expect(screen.getByRole('heading', { name: 'Task Board' })).toBeInTheDocument()
 

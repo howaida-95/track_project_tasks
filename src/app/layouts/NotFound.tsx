@@ -16,7 +16,7 @@ export function NotFound() {
         The page you are looking for does not exist or was moved.
       </p>
       <Button asChild className="mt-6">
-        <Link to={paths.board}>Back to board</Link>
+        <Link to={paths.tasks}>Back to tasks</Link>
       </Button>
     </section>
   )

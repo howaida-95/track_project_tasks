@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, type RenderOptions } from '@testing-library/react'
 import type { ReactElement, ReactNode } from 'react'
 import { Provider } from 'react-redux'
+import { MemoryRouter, type MemoryRouterProps } from 'react-router-dom'
 
 import { createAppStore } from '@/app/store/store.ts'
 
@@ -17,6 +18,7 @@ function createTestQueryClient(): QueryClient {
 type ExtendedRenderOptions = Omit<RenderOptions, 'wrapper'> & {
   store?: ReturnType<typeof createAppStore>
   queryClient?: QueryClient
+  router?: MemoryRouterProps
 }
 
 export function renderWithProviders(
@@ -24,15 +26,22 @@ export function renderWithProviders(
   {
     store = createAppStore(),
     queryClient = createTestQueryClient(),
+    router,
     ...renderOptions
   }: ExtendedRenderOptions = {},
 ) {
   function Wrapper({ children }: { children: ReactNode }) {
-    return (
+    const content = (
       <Provider store={store}>
         <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
       </Provider>
     )
+
+    if (router) {
+      return <MemoryRouter {...router}>{content}</MemoryRouter>
+    }
+
+    return content
   }
 
   return {

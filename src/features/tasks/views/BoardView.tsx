@@ -1,20 +1,13 @@
 import { useCallback, useMemo } from 'react'
 
 import { Button } from '@/components/ui/button'
-import { TaskDialogsHost } from '@/features/tasks/components/TaskDialogsHost.tsx'
 import { useTaskDialogActions } from '@/features/tasks/hooks/useTaskDialogActions.ts'
 import { TaskCard } from '@/features/tasks/components/TaskCard.tsx'
+import { useTaskFilters } from '@/features/tasks/filters/useTaskFilters.ts'
 import { useTasks } from '@/features/tasks/hooks/useTasks.ts'
 import type { Task } from '@/features/tasks/model/types.ts'
 import { QueryState } from '@/shared/components/query-state.tsx'
 import { TASK_STATUSES, TASK_STATUS_LABELS, type TaskStatus } from '@/shared/types/task-ui.ts'
-
-const BOARD_QUERY = {
-  page: 1,
-  limit: 100,
-  sort: 'createdAt' as const,
-  order: 'desc' as const,
-}
 
 function groupTasksByStatus(tasks: Task[]): Record<TaskStatus, Task[]> {
   return TASK_STATUSES.reduce(
@@ -33,7 +26,15 @@ function groupTasksByStatus(tasks: Task[]): Record<TaskStatus, Task[]> {
 
 export function BoardView() {
   const { openCreate, openEdit, openDelete } = useTaskDialogActions()
-  const { data, isLoading, isError, error, refetch } = useTasks(BOARD_QUERY)
+  const { listParams } = useTaskFilters()
+  const boardParams = useMemo(
+    () => ({
+      ...listParams,
+      limit: Math.max(listParams.limit ?? 50, 100),
+    }),
+    [listParams],
+  )
+  const { data, isLoading, isError, error, refetch } = useTasks(boardParams)
 
   const tasksByStatus = useMemo(() => groupTasksByStatus(data?.data ?? []), [data?.data])
 
@@ -52,17 +53,12 @@ export function BoardView() {
   )
 
   return (
-    <div className="flex h-[calc(100dvh-9rem)] flex-col overflow-hidden">
-      <header className="mb-4 flex shrink-0 flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Task Board</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Create, edit, and delete tasks against the mock API.
-          </p>
-        </div>
-        <Button type="button" onClick={() => openCreate('todo')}>
-          New task
-        </Button>
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <header className="mb-4 shrink-0">
+        <h1 className="text-2xl font-bold tracking-tight">Task Board</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Create, edit, and delete tasks against the mock API.
+        </p>
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -121,8 +117,6 @@ export function BoardView() {
           </div>
         </QueryState>
       </div>
-
-      <TaskDialogsHost />
     </div>
   )
 }

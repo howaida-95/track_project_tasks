@@ -11,7 +11,9 @@ describe('App board route', () => {
     localStorage.clear()
     replaceTaskStore([makeTask({ title: 'Smoke test task', status: 'todo' })])
 
-    renderWithProviders(<BoardView />)
+    renderWithProviders(<BoardView />, {
+      router: { initialEntries: ['/tasks'] },
+    })
 
     expect(screen.getByRole('heading', { name: 'Task Board' })).toBeInTheDocument()
 
