@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { createTask, deleteTask, updateTask } from '@/features/tasks/api/task.api.ts'
 import { taskKeys } from '@/features/tasks/api/task.keys.ts'
 import { toCreateTaskInput, type TaskFormValues } from '@/features/tasks/model/schemas.ts'
-import type { PaginatedTasks, UpdateTaskInput } from '@/features/tasks/model/types.ts'
+import type { PaginatedTasks, Task, UpdateTaskInput } from '@/features/tasks/model/types.ts'
 import type { TaskId } from '@/shared/types/branded.ts'
 
 type ListSnapshot = Array<[readonly unknown[], PaginatedTasks | undefined]>
@@ -28,10 +28,26 @@ function patchTaskInLists(
               ...patch,
               description: patch.description ?? task.description,
               dueDate: patch.dueDate === undefined ? task.dueDate : patch.dueDate,
-              updatedAt: new Date().toISOString(),
             }
           : task,
       ),
+    }
+  })
+}
+
+function replaceTaskInLists(
+  queryClient: ReturnType<typeof useQueryClient>,
+  taskId: TaskId,
+  updatedTask: Task,
+) {
+  queryClient.setQueriesData<PaginatedTasks>({ queryKey: taskKeys.lists() }, (current) => {
+    if (!current) {
+      return current
+    }
+
+    return {
+      ...current,
+      data: current.data.map((task) => (task.id === taskId ? updatedTask : task)),
     }
   })
 }
@@ -95,12 +111,10 @@ export function useTaskMutations() {
         },
       })
     },
-    onSuccess: () => {
+    onSuccess: (updatedTask, { taskId }) => {
       toast.success('Task updated')
-    },
-    onSettled: (_data, _error, variables) => {
-      void queryClient.invalidateQueries({ queryKey: taskKeys.detail(variables.taskId) })
-      void queryClient.invalidateQueries({ queryKey: taskKeys.lists() })
+      queryClient.setQueryData(taskKeys.detail(taskId), updatedTask)
+      replaceTaskInLists(queryClient, taskId, updatedTask)
     },
   })
 

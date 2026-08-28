@@ -12,7 +12,7 @@ import { TASK_STATUSES, TASK_STATUS_LABELS, type TaskStatus } from '@/shared/typ
 const BOARD_QUERY = {
   page: 1,
   limit: 100,
-  sort: 'updatedAt' as const,
+  sort: 'createdAt' as const,
   order: 'desc' as const,
 }
 
