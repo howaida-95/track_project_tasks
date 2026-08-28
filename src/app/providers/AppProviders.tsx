@@ -6,6 +6,7 @@ import { Toaster } from 'sonner'
 
 import { router } from '@/app/routes/router.tsx'
 import { store } from '@/app/store/store.ts'
+import { getRetryDelay, shouldRetryQuery } from '@/shared/api/retry-policy.ts'
 
 type AppProvidersProps = {
   children?: ReactNode
@@ -23,6 +24,8 @@ export function AppProviders({ children }: AppProvidersProps) {
           queries: {
             staleTime: 30_000,
             gcTime: 5 * 60_000,
+            retry: shouldRetryQuery,
+            retryDelay: getRetryDelay,
           },
         },
       }),
