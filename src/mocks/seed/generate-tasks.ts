@@ -76,7 +76,11 @@ function pickMany<T>(random: () => number, values: readonly T[], max: number): T
   return [...chosen]
 }
 
-function toDateString(date: Date): string {
+function toDateString(date: Date): string | null {
+  if (Number.isNaN(date.getTime())) {
+    return null
+  }
+
   return date.toISOString().slice(0, 10)
 }
 

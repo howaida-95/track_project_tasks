@@ -30,6 +30,7 @@ import {
 } from '@/features/tasks/board/board-dnd.ts'
 import { BoardColumn } from '@/features/tasks/components/BoardColumn.tsx'
 import { TaskCard } from '@/features/tasks/components/TaskCard.tsx'
+import { flattenTaskListData } from '@/features/tasks/api/task-list-cache.ts'
 import { useTaskFilters } from '@/features/tasks/filters/useTaskFilters.ts'
 import { useColumnTasks } from '@/features/tasks/hooks/useColumnTasks.ts'
 import { useTaskDialogActions } from '@/features/tasks/hooks/useTaskDialogActions.ts'
@@ -74,10 +75,10 @@ export function BoardView() {
 
   const tasksByStatus = useMemo(
     () => ({
-      todo: todoQuery.data?.pages.flatMap((page) => page.data) ?? [],
-      in_progress: inProgressQuery.data?.pages.flatMap((page) => page.data) ?? [],
-      in_review: inReviewQuery.data?.pages.flatMap((page) => page.data) ?? [],
-      done: doneQuery.data?.pages.flatMap((page) => page.data) ?? [],
+      todo: todoQuery.data ? flattenTaskListData(todoQuery.data) : [],
+      in_progress: inProgressQuery.data ? flattenTaskListData(inProgressQuery.data) : [],
+      in_review: inReviewQuery.data ? flattenTaskListData(inReviewQuery.data) : [],
+      done: doneQuery.data ? flattenTaskListData(doneQuery.data) : [],
     }),
     [doneQuery.data, inProgressQuery.data, inReviewQuery.data, todoQuery.data],
   )

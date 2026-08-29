@@ -29,12 +29,29 @@ export function isInfiniteTaskList(data: unknown): data is InfiniteData<Paginate
   )
 }
 
-export function flattenTaskListData(data: CachedTaskList): Task[] {
-  if (isInfiniteTaskList(data)) {
-    return data.pages.flatMap((page) => page.data)
+/** Keep first occurrence when infinite pages or optimistic writes overlap. */
+export function uniqueTasksById(tasks: Task[]): Task[] {
+  const seen = new Set<string>()
+  const unique: Task[] = []
+
+  for (const task of tasks) {
+    if (seen.has(task.id)) {
+      continue
+    }
+
+    seen.add(task.id)
+    unique.push(task)
   }
 
-  return data.data
+  return unique
+}
+
+export function flattenTaskListData(data: CachedTaskList): Task[] {
+  if (isInfiniteTaskList(data)) {
+    return uniqueTasksById(data.pages.flatMap((page) => page.data))
+  }
+
+  return uniqueTasksById(data.data)
 }
 
 export function replaceTaskListData(current: CachedTaskList, nextTasks: Task[]): CachedTaskList {
@@ -235,8 +252,9 @@ function writeListCache(
   current: CachedTaskList,
   nextTasks: Task[],
 ) {
-  const delta = nextTasks.length - flattenTaskListData(current).length
-  queryClient.setQueryData(key, adjustMetaTotal(replaceTaskListData(current, nextTasks), delta))
+  const uniqueTasks = uniqueTasksById(nextTasks)
+  const delta = uniqueTasks.length - flattenTaskListData(current).length
+  queryClient.setQueryData(key, adjustMetaTotal(replaceTaskListData(current, uniqueTasks), delta))
 }
 
 export function applyTaskPatchInLists(
@@ -304,6 +322,10 @@ export function replaceTaskInLists(queryClient: QueryClient, taskId: TaskId, upd
     }
 
     if (columnStatus === updatedTask.status) {
+      if (tasks.some((task) => task.id === updatedTask.id)) {
+        continue
+      }
+
       const toIndex = Math.max(0, Math.min(updatedTask.position, tasks.length))
       writeListCache(queryClient, key, current, [
         ...tasks.slice(0, toIndex),

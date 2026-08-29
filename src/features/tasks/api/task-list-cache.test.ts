@@ -6,6 +6,7 @@ import {
   flattenTaskListData,
   removeTaskFromLists,
   replaceTaskInLists,
+  uniqueTasksById,
   type CachedTaskList,
 } from '@/features/tasks/api/task-list-cache.ts'
 import { taskKeys } from '@/features/tasks/api/task.keys.ts'
@@ -112,5 +113,35 @@ describe('task list cache', () => {
 
     expect(titles).toEqual(['Keep me'])
     expect(flattenTaskListData(cached!).length).toBe(1)
+  })
+
+  it('dedupes overlapping infinite pages when flattening', () => {
+    const shared = makeTask({ title: 'Shared', status: 'todo', position: 0 })
+    const onlyFirst = makeTask({ title: 'First only', status: 'todo', position: 1 })
+    const onlySecond = makeTask({ title: 'Second only', status: 'todo', position: 2 })
+
+    const data = {
+      pages: [
+        {
+          data: [shared, onlyFirst],
+          meta: { total: 3, page: 1, limit: 2, totalPages: 2 },
+        },
+        {
+          data: [shared, onlySecond],
+          meta: { total: 3, page: 2, limit: 2, totalPages: 2 },
+        },
+      ],
+      pageParams: [1, 2],
+    }
+
+    expect(uniqueTasksById([shared, shared, onlyFirst]).map((task) => task.title)).toEqual([
+      'Shared',
+      'First only',
+    ])
+    expect(flattenTaskListData(data).map((task) => task.title)).toEqual([
+      'Shared',
+      'First only',
+      'Second only',
+    ])
   })
 })

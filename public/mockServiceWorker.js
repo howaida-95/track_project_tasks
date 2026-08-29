@@ -96,6 +96,13 @@ addEventListener('fetch', function (event) {
     return
   }
 
+  // Only mock the API. SPA routes like /tasks must not go through passthrough
+  // (that produces "Failed to fetch" when the browser aborts or bypasses them).
+  const requestUrl = new URL(event.request.url)
+  if (!requestUrl.pathname.startsWith('/api/')) {
+    return
+  }
+
   // Opening the DevTools triggers the "only-if-cached" request
   // that cannot be handled by the worker. Bypass such requests.
   if (event.request.cache === 'only-if-cached' && event.request.mode !== 'same-origin') {
@@ -235,7 +242,7 @@ async function getResponse(event, client, requestId, requestInterceptedAt) {
       }
     }
 
-    return fetch(requestClone, { headers })
+    return fetch(requestClone, { headers }).catch(() => Response.error())
   }
 
   // Bypass mocking when the client is not active.

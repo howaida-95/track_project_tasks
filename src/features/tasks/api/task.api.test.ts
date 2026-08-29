@@ -60,9 +60,13 @@ describe('task.api', () => {
   })
 
   it('maps API failures to ApiError', async () => {
-    await expect(axiosClient.get('/tasks', { params: { forceError: 500 } })).rejects.toBeInstanceOf(
-      ApiError,
+    server.use(
+      http.get(`${import.meta.env.VITE_API_BASE_URL ?? '/api'}/tasks`, () =>
+        HttpResponse.json({ status: 500, message: 'Forced server error' }, { status: 500 }),
+      ),
     )
+
+    await expect(axiosClient.get('/tasks')).rejects.toBeInstanceOf(ApiError)
   })
 
   it('throws ApiContractError for invalid payloads', async () => {

@@ -32,4 +32,16 @@ describe('TaskFormSchema', () => {
       dueDate: null,
     })
   })
+
+  it('maps whitespace-only due date to null', () => {
+    expect(
+      toCreateTaskInput({
+        title: 'New task',
+        description: 'Details',
+        status: 'todo',
+        priority: 'high',
+        dueDate: '   ',
+      }).dueDate,
+    ).toBeNull()
+  })
 })
