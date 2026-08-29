@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 
+import AnalyticsLayout from '@/app/layouts/AnalyticsLayout.tsx'
 import BoardLayout from '@/app/layouts/BoardLayout.tsx'
 import ErrorLayout from '@/app/layouts/ErrorLayout.tsx'
 import RootLayout from '@/app/layouts/RootLayout.tsx'
@@ -24,6 +25,15 @@ export const router = createBrowserRouter([
         element: (
           <Suspense fallback={<RouteFallback />}>
             <BoardLayout />
+          </Suspense>
+        ),
+      },
+      {
+        path: paths.analytics,
+        errorElement: <ErrorLayout />,
+        element: (
+          <Suspense fallback={<RouteFallback />}>
+            <AnalyticsLayout />
           </Suspense>
         ),
       },
