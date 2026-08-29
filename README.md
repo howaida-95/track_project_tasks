@@ -158,6 +158,25 @@ Boundaries handle **render** failures; Query + toasts handle **async** failures.
 | No auth / i18n / assignees             | Out of scope for the brief             | Multi-tenant and localization deferred                             |
 | AI-assisted implementation             | Faster delivery of boilerplate + tests | Human review for architecture and trade-offs (see below)           |
 
+### Performance trade-offs
+
+The brief asks for **1,000+ tasks** without freezing the UI. Choices that bought speed (and what they cost):
+
+| Choice                                                          | Why                                                                        | Trade-off                                                                                                                           |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **Virtualize list + board columns** (`@tanstack/react-virtual`) | Only mount visible cards/rows for the 1,200-task seed                      | Must measure item size and keep scroll containers stable; off-screen nodes are not in the DOM for tests/a11y queries until scrolled |
+| **Keep DnD on virtualized columns**                             | Keyboard + pointer drag still required for Kanban                          | Harder than a “render ~50 + Show more” fallback; layout animation disabled during drag to avoid jitter                              |
+| **Per-column infinite queries**                                 | Each status loads its own page; URL filters/sort apply per column          | More network fan-out than one giant list; default board order still uses `position` so DnD stays stable                             |
+| **`GET /tasks/stats` for Analytics**                            | Aggregates over the full catalog without shipping 1,200 rows to the client | Analytics cannot derive ad-hoc charts from raw task payloads without another endpoint                                               |
+| **Lazy route chunks** (board, list, dialogs, analytics)         | Smaller initial JS; board/list only load when needed                       | First open pays a short Suspense flash (`RouteFallback`)                                                                            |
+| **`React.memo` on `TaskCard`**                                  | Cuts re-renders while dragging / updating siblings                         | Callbacks from parents must stay stable (`useCallback` where the board wires edit/delete)                                           |
+| **300ms debounced search**                                      | Avoids a request per keystroke                                             | Not `useDeferredValue` for filter recomputation — debounce at the URL/API edge was enough for the budget                            |
+| **Vendor code splitting + `build:analyze`**                     | Keeps dnd-kit / virtual / RHF in separate chunks                           | Main bundle still large (React + MSW worker path in the demo build)                                                                 |
+| **MSW in production for the demo**                              | Live Vercel site works without a backend                                   | Extra client work to install the service worker; not how a real API deploy would look                                               |
+| **Tablet: fixed column width + horizontal scroll**              | Readable cards instead of four crushed `flex-1` columns                    | Desktop-equal columns only from `xl` up; not a “fit everything on screen” tablet layout                                             |
+
+What we **did not** ship in the timebox: Profiler before/after render counts in this README, windowed “show more” as a DnD fallback, or React Compiler. Bundle size can be inspected with `npm run build:analyze`.
+
 ### API surface shipped
 
 - `GET/POST /tasks`, `GET/PATCH/DELETE /tasks/:id`
