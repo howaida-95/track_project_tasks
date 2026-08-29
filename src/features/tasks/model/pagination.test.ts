@@ -16,7 +16,18 @@ describe('pagination limits', () => {
     expect(PaginationSchema.parse({ limit: MAX_PAGE_SIZE }).limit).toBe(MAX_PAGE_SIZE)
   })
 
-  it('builds per-column board params so URL page/sort do not split a column', () => {
+  it('keeps default board columns ordered by position so drag-and-drop stays stable', () => {
+    expect(
+      toBoardColumnParams({ page: 4, limit: 25, sort: 'createdAt', order: 'desc' }, 'todo'),
+    ).toEqual({
+      status: ['todo'],
+      sort: 'position',
+      order: 'asc',
+      limit: BOARD_COLUMN_PAGE_SIZE,
+    })
+  })
+
+  it('applies URL sort and order within each board column', () => {
     expect(
       toBoardColumnParams(
         {
@@ -31,8 +42,8 @@ describe('pagination limits', () => {
       ),
     ).toEqual({
       status: ['todo'],
-      sort: 'position',
-      order: 'asc',
+      sort: 'title',
+      order: 'desc',
       limit: BOARD_COLUMN_PAGE_SIZE,
       q: 'auth',
       priority: ['high'],

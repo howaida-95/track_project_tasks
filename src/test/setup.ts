@@ -82,16 +82,17 @@ globalThis.ResizeObserver = ResizeObserverStub
 
 HTMLElement.prototype.setPointerCapture ??= () => undefined
 HTMLElement.prototype.releasePointerCapture ??= () => undefined
+HTMLElement.prototype.hasPointerCapture ??= () => false
 
 HTMLCanvasElement.prototype.getContext = function getContext(contextId) {
   if (contextId === '2d') {
     return {
       measureText: () => ({ width: 0 }),
-    } as CanvasRenderingContext2D
+    } as unknown as CanvasRenderingContext2D
   }
 
   return null
-}
+} as typeof HTMLCanvasElement.prototype.getContext
 
 beforeAll(() => {
   server.listen({ onUnhandledRequest: 'error' })

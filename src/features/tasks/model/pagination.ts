@@ -1,4 +1,4 @@
-import type { TaskListParams } from '@/features/tasks/model/types.ts'
+import type { SortOrder, TaskListParams, TaskSortField } from '@/features/tasks/model/types.ts'
 import type { TaskStatus } from '@/shared/types/task-ui.ts'
 
 export const DEFAULT_PAGE_SIZE = 25
@@ -9,14 +9,27 @@ export function isBoardColumnEnabled(listParams: TaskListParams, status: TaskSta
   return !listParams.status?.length || listParams.status.includes(status)
 }
 
+function toBoardSort(listParams: TaskListParams): { sort: TaskSortField; order: SortOrder } {
+  const sort = listParams.sort ?? 'createdAt'
+  const order = listParams.order ?? 'desc'
+  const isDefaultListSort = sort === 'createdAt' && order === 'desc'
+
+  if (isDefaultListSort) {
+    return { sort: 'position', order: 'asc' }
+  }
+
+  return { sort, order }
+}
+
 export function toBoardColumnParams(
   listParams: TaskListParams,
   status: TaskStatus,
 ): TaskListParams {
+  const { sort, order } = toBoardSort(listParams)
   const params: TaskListParams = {
     status: [status],
-    sort: 'position',
-    order: 'asc',
+    sort,
+    order,
     limit: BOARD_COLUMN_PAGE_SIZE,
   }
 
