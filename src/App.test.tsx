@@ -7,15 +7,13 @@ import { makeTask } from '@/test/factories/make-task.ts'
 import { renderWithProviders } from '@/test/renderWithProviders.tsx'
 
 describe('App board route', () => {
-  it('renders the board heading', async () => {
+  it('renders tasks from the mock API', async () => {
     localStorage.clear()
     replaceTaskStore([makeTask({ title: 'Smoke test task', status: 'todo' })])
 
     renderWithProviders(<BoardView />, {
       router: { initialEntries: ['/tasks'] },
     })
-
-    expect(screen.getByRole('heading', { name: 'Task Board' })).toBeInTheDocument()
 
     await waitFor(() => {
       expect(screen.getByText('Smoke test task')).toBeInTheDocument()

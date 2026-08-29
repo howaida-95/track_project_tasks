@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { SlidersHorizontalIcon } from 'lucide-react'
+import { ArrowUpDownIcon, SearchIcon, SlidersHorizontalIcon } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge.tsx'
 import { Button } from '@/components/ui/button'
@@ -41,6 +41,7 @@ const SORT_OPTIONS: Array<{ value: TaskSortField; label: string }> = [
   { value: 'dueDate', label: 'Due date' },
   { value: 'priority', label: 'Priority' },
   { value: 'title', label: 'Title' },
+  { value: 'position', label: 'Board order' },
 ]
 
 function toggleValue<T extends string>(values: T[] | undefined, value: T): T[] {
@@ -87,6 +88,34 @@ function countActiveFilters(listParams: TaskListParams): number {
   return count
 }
 
+function FilterChip({
+  label,
+  isActive,
+  onClick,
+}: {
+  label: string
+  isActive: boolean
+  onClick: () => void
+}) {
+  return (
+    <Button
+      type="button"
+      size="sm"
+      variant={isActive ? 'default' : 'outline'}
+      aria-pressed={isActive}
+      className={cn(
+        'h-8 rounded-full px-3 text-xs font-medium shadow-none',
+        isActive
+          ? 'bg-primary text-primary-foreground'
+          : 'border-border/80 bg-background text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+      )}
+      onClick={onClick}
+    >
+      {label}
+    </Button>
+  )
+}
+
 type FilterDrawerContentProps = {
   searchInput: string
   onSearchInputChange: (value: string) => void
@@ -102,119 +131,145 @@ function FilterDrawerContent({
   const hasActiveFilters = countActiveFilters(listParams) > 0
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto py-2">
-      <div className="space-y-2">
-        <Label htmlFor="task-search">Search</Label>
-        <Input
-          id="task-search"
-          type="search"
-          placeholder="Search title, description, or tags"
-          value={searchInput}
-          onChange={(event) => {
-            onSearchInputChange(event.target.value)
-          }}
-        />
-      </div>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-1 py-1">
+        <section className="space-y-3">
+          <div className="space-y-1">
+            <Label htmlFor="task-search" className="text-xs font-medium tracking-wide">
+              Search
+            </Label>
+            <p className="text-xs text-muted-foreground">Match title, description, or tags.</p>
+          </div>
+          <div className="relative">
+            <SearchIcon
+              className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <Input
+              id="task-search"
+              type="search"
+              placeholder="Search tasks"
+              value={searchInput}
+              className="h-9 bg-background/80 pl-8 shadow-sm"
+              onChange={(event) => {
+                onSearchInputChange(event.target.value)
+              }}
+            />
+          </div>
+        </section>
 
-      <div className="space-y-2">
-        <Label htmlFor="task-sort">Sort by</Label>
-        <Select
-          value={listParams.sort ?? 'createdAt'}
-          onValueChange={(value) => {
-            setListParams({ sort: value as TaskSortField })
-          }}
-        >
-          <SelectTrigger id="task-sort" className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {SORT_OPTIONS.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+        <section className="space-y-3">
+          <div className="space-y-1">
+            <p className="text-xs font-medium tracking-wide">Status</p>
+            <p className="text-xs text-muted-foreground">Show only selected columns.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {TASK_STATUSES.map((status) => {
+              const isActive = listParams.status?.includes(status) ?? false
 
-      <div className="space-y-2">
-        <Label htmlFor="task-order">Order</Label>
-        <Select
-          value={listParams.order ?? 'desc'}
-          onValueChange={(value) => {
-            setListParams({ order: value as 'asc' | 'desc' })
-          }}
-        >
-          <SelectTrigger id="task-order" className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="desc">Descending</SelectItem>
-            <SelectItem value="asc">Ascending</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+              return (
+                <FilterChip
+                  key={status}
+                  label={TASK_STATUS_LABELS[status]}
+                  isActive={isActive}
+                  onClick={() => {
+                    setListParams({
+                      status: toggleValue(listParams.status, status as TaskStatus),
+                    })
+                  }}
+                />
+              )
+            })}
+          </div>
+        </section>
 
-      <div className="space-y-2">
-        <p className="text-sm font-medium">Status</p>
-        <div className="flex flex-wrap gap-2">
-          {TASK_STATUSES.map((status) => {
-            const isActive = listParams.status?.includes(status) ?? false
+        <section className="space-y-3">
+          <div className="space-y-1">
+            <p className="text-xs font-medium tracking-wide">Priority</p>
+            <p className="text-xs text-muted-foreground">Narrow by urgency.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {TASK_PRIORITIES.map((priority) => {
+              const isActive = listParams.priority?.includes(priority) ?? false
 
-            return (
-              <Button
-                key={status}
-                type="button"
-                size="sm"
-                variant={isActive ? 'default' : 'outline'}
-                aria-pressed={isActive}
-                onClick={() => {
-                  setListParams({
-                    status: toggleValue(listParams.status, status as TaskStatus),
-                  })
+              return (
+                <FilterChip
+                  key={priority}
+                  label={TASK_PRIORITY_LABELS[priority]}
+                  isActive={isActive}
+                  onClick={() => {
+                    setListParams({
+                      priority: toggleValue(listParams.priority, priority as TaskPriority),
+                    })
+                  }}
+                />
+              )
+            })}
+          </div>
+        </section>
+
+        <section className="space-y-3 rounded-xl border border-border/70 bg-muted/30 p-3">
+          <div className="flex items-center gap-2 text-xs font-medium tracking-wide">
+            <ArrowUpDownIcon className="size-3.5 text-muted-foreground" aria-hidden="true" />
+            Sort
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="task-sort" className="text-xs text-muted-foreground">
+                Sort by
+              </Label>
+              <Select
+                value={listParams.sort ?? 'createdAt'}
+                onValueChange={(value) => {
+                  setListParams({ sort: value as TaskSortField })
                 }}
               >
-                {TASK_STATUS_LABELS[status]}
-              </Button>
-            )
-          })}
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <p className="text-sm font-medium">Priority</p>
-        <div className="flex flex-wrap gap-2">
-          {TASK_PRIORITIES.map((priority) => {
-            const isActive = listParams.priority?.includes(priority) ?? false
-
-            return (
-              <Button
-                key={priority}
-                type="button"
-                size="sm"
-                variant={isActive ? 'default' : 'outline'}
-                aria-pressed={isActive}
-                className={cn(!isActive && 'bg-background')}
-                onClick={() => {
-                  setListParams({
-                    priority: toggleValue(listParams.priority, priority as TaskPriority),
-                  })
+                <SelectTrigger id="task-sort" className="h-9 w-full bg-background shadow-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SORT_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="task-order" className="text-xs text-muted-foreground">
+                Order
+              </Label>
+              <Select
+                value={listParams.order ?? 'desc'}
+                onValueChange={(value) => {
+                  setListParams({ order: value as 'asc' | 'desc' })
                 }}
               >
-                {TASK_PRIORITY_LABELS[priority]}
-              </Button>
-            )
-          })}
-        </div>
+                <SelectTrigger id="task-order" className="h-9 w-full bg-background shadow-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="desc">Descending</SelectItem>
+                  <SelectItem value="asc">Ascending</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </section>
       </div>
 
-      {hasActiveFilters ? (
-        <SheetFooter className="px-0">
-          <Button type="button" variant="outline" onClick={onClear}>
-            Clear all filters
-          </Button>
-        </SheetFooter>
-      ) : null}
+      <SheetFooter className="mt-4 border-t border-border/70 px-0 pt-4">
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          disabled={!hasActiveFilters}
+          onClick={onClear}
+        >
+          Clear all filters
+        </Button>
+      </SheetFooter>
     </div>
   )
 }
@@ -253,7 +308,7 @@ export function FilterBar() {
             aria-label={
               activeFilterCount > 0 ? `Open filters, ${activeFilterCount} active` : 'Open filters'
             }
-            className="relative gap-2"
+            className="relative gap-2 bg-background shadow-sm"
           >
             <SlidersHorizontalIcon className="size-4" />
             Filters
@@ -265,22 +320,35 @@ export function FilterBar() {
           </Button>
         </SheetTrigger>
 
-        <SheetContent side="right" aria-describedby="filter-drawer-description">
-          <SheetHeader>
-            <SheetTitle>Filters</SheetTitle>
-            <SheetDescription id="filter-drawer-description">
-              Search and refine tasks. Changes apply immediately.
-            </SheetDescription>
+        <SheetContent
+          side="right"
+          aria-describedby="filter-drawer-description"
+          className="w-full max-w-sm gap-0 bg-popover p-0 sm:max-w-md"
+        >
+          <SheetHeader className="border-b border-border/70 bg-muted/40 px-5 py-4">
+            <div className="flex items-start gap-3 pr-8">
+              <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <SlidersHorizontalIcon className="size-4" aria-hidden="true" />
+              </span>
+              <div className="space-y-1">
+                <SheetTitle className="text-lg font-semibold tracking-tight">Filters</SheetTitle>
+                <SheetDescription id="filter-drawer-description">
+                  Search and refine tasks. Changes apply immediately.
+                </SheetDescription>
+              </div>
+            </div>
           </SheetHeader>
 
-          <FilterDrawerContent
-            searchInput={searchInput}
-            onSearchInputChange={setSearchInput}
-            onClear={() => {
-              handleResetFilters()
-              setOpen(false)
-            }}
-          />
+          <div className="flex min-h-0 flex-1 flex-col px-5 py-5">
+            <FilterDrawerContent
+              searchInput={searchInput}
+              onSearchInputChange={setSearchInput}
+              onClear={() => {
+                handleResetFilters()
+                setOpen(false)
+              }}
+            />
+          </div>
         </SheetContent>
       </Sheet>
     </section>

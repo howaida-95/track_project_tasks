@@ -257,12 +257,9 @@ export function BoardView() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <header className="mb-4 shrink-0">
-        <h1 className="text-2xl font-bold tracking-tight">Task Board</h1>
-        <p id={BOARD_DND_INSTRUCTIONS_ID} className="sr-only">
-          {BOARD_SCREEN_READER_INSTRUCTIONS.draggable}
-        </p>
-      </header>
+      <p id={BOARD_DND_INSTRUCTIONS_ID} className="sr-only">
+        {BOARD_SCREEN_READER_INSTRUCTIONS.draggable}
+      </p>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <QueryState
@@ -293,7 +290,7 @@ export function BoardView() {
             onDragEnd={handleDragEnd}
             onDragCancel={handleDragCancel}
           >
-            <div className="flex h-full min-h-0 flex-1 gap-4 overflow-x-auto overflow-y-hidden xl:overflow-x-hidden">
+            <div className="flex h-full min-h-0 flex-1 gap-3 overflow-x-auto overflow-y-hidden overscroll-x-contain pb-1 sm:gap-4 xl:overflow-x-hidden">
               {TASK_STATUSES.map((status) => {
                 const query = columnQueries[status]
                 const loaded = columns[status] ?? emptyTasksByStatus()[status]

@@ -17,7 +17,7 @@ export function TaskViewSwitcher() {
     <div
       role="group"
       aria-label="Task view"
-      className="inline-flex rounded-lg border border-border bg-muted/30 p-1"
+      className="inline-flex rounded-lg border border-border/70 bg-muted/50 p-1 shadow-sm"
     >
       {VIEW_OPTIONS.map(({ value, label, icon: Icon }) => {
         const isActive = view === value
@@ -36,7 +36,7 @@ export function TaskViewSwitcher() {
             }}
           >
             <Icon className="size-4" />
-            <span className="sr-only sm:not-sr-only">{value === 'board' ? 'Board' : 'List'}</span>
+            <span className="sr-only xl:not-sr-only">{value === 'board' ? 'Board' : 'List'}</span>
           </Button>
         )
       })}

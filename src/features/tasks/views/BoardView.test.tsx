@@ -92,7 +92,7 @@ describe('BoardView', () => {
       router: { initialEntries: ['/tasks'] },
     })
 
-    expect(screen.getByRole('heading', { name: 'Task Board' })).toBeInTheDocument()
+    expect(await screen.findByRole('region', { name: 'To Do' })).toBeInTheDocument()
 
     await waitFor(() => {
       expect(screen.getByText('Board task alpha')).toBeInTheDocument()
@@ -133,6 +133,28 @@ describe('BoardView', () => {
     })
 
     expect(screen.getByText('Keep on board')).toBeInTheDocument()
+  })
+
+  it('sorts cards within a column from URL sort and order params', async () => {
+    replaceTaskStore([
+      makeTask({ title: 'Zebra card', status: 'todo', position: 0 }),
+      makeTask({ title: 'Alpha card', status: 'todo', position: 1 }),
+    ])
+
+    renderWithProviders(<BoardView />, {
+      router: { initialEntries: ['/tasks?sort=title&order=asc'] },
+    })
+
+    const todo = await screen.findByRole('region', { name: 'To Do' })
+
+    await waitFor(() => {
+      const titles = within(todo)
+        .getAllByRole('heading', { level: 3 })
+        .map((heading) => heading.textContent)
+
+      expect(titles[0]).toBe('Alpha card')
+      expect(titles[1]).toBe('Zebra card')
+    })
   })
 
   it('moves a task between columns with the keyboard', async () => {

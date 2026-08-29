@@ -1,3 +1,5 @@
+import { PencilIcon, PlusIcon } from 'lucide-react'
+
 import {
   Dialog,
   DialogContent,
@@ -33,22 +35,32 @@ export function TaskDialog({
     mode === 'create'
       ? 'Add a new task to the workspace.'
       : 'Update task details and save your changes.'
+  const Icon = mode === 'create' ? PlusIcon : PencilIcon
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+      <DialogContent className="max-h-[min(90dvh,40rem)] max-w-lg gap-0 overflow-y-auto p-0 sm:max-w-lg">
+        <DialogHeader className="border-b border-border/70 bg-muted/40 px-5 py-4">
+          <div className="flex items-start gap-3 pr-8">
+            <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Icon className="size-4" aria-hidden="true" />
+            </span>
+            <div className="space-y-1">
+              <DialogTitle className="text-lg font-semibold tracking-tight">{title}</DialogTitle>
+              <DialogDescription>{description}</DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
-        <TaskForm
-          key={task?.id ?? `create-${formDefaults?.status ?? 'todo'}`}
-          submitLabel={mode === 'create' ? 'Create task' : 'Save changes'}
-          isSubmitting={isSubmitting}
-          onSubmit={onSubmit}
-          {...(task ? { task } : {})}
-          {...(formDefaults ? { formDefaults } : {})}
-        />
+        <div className="px-5 py-5">
+          <TaskForm
+            key={task?.id ?? `create-${formDefaults?.status ?? 'todo'}`}
+            submitLabel={mode === 'create' ? 'Create task' : 'Save changes'}
+            isSubmitting={isSubmitting}
+            onSubmit={onSubmit}
+            {...(task ? { task } : {})}
+            {...(formDefaults ? { formDefaults } : {})}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   )

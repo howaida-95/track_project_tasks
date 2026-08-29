@@ -120,6 +120,37 @@ describe('ListView', () => {
     })
   })
 
+  it('sorts the list from URL sort and order params', async () => {
+    replaceTaskStore([
+      makeTask({
+        title: 'Zebra task',
+        status: 'todo',
+        createdAt: '2026-01-02T00:00:00.000Z',
+      }),
+      makeTask({
+        title: 'Alpha task',
+        status: 'todo',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      }),
+    ])
+
+    renderWithProviders(<ListView />, {
+      router: { initialEntries: ['/tasks?view=list&sort=title&order=asc'] },
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText('Alpha task')).toBeInTheDocument()
+    })
+
+    const titles = screen
+      .getAllByRole('row')
+      .slice(1)
+      .map((row) => row.textContent ?? '')
+
+    expect(titles[0]).toContain('Alpha task')
+    expect(titles[1]).toContain('Zebra task')
+  })
+
   it('virtualizes long pages so off-screen rows are not mounted', async () => {
     replaceTaskStore(
       Array.from({ length: 40 }, (_, index) =>

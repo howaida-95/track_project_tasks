@@ -83,7 +83,7 @@ export function BoardColumn({
       data-drop-target={showDropHighlight ? 'true' : undefined}
       aria-labelledby={`column-${status}`}
       className={cn(
-        'flex h-full min-h-0 w-72 shrink-0 flex-col overflow-hidden rounded-card border p-3 transition-colors md:w-auto md:min-w-0 md:flex-1',
+        'flex h-full min-h-0 w-[min(18rem,85vw)] shrink-0 flex-col overflow-hidden rounded-card border p-3 transition-colors xl:w-auto xl:min-w-64 xl:flex-1',
         showDropHighlight
           ? 'border-ring/60 bg-accent/70 shadow-inner'
           : 'border-border bg-muted/20',
