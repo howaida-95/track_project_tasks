@@ -57,4 +57,21 @@ describe('TaskViewSwitcher', () => {
 
     expect(screen.getByRole('button', { name: 'New task' })).toBeInTheDocument()
   })
+
+  it('loads the create dialog on demand', async () => {
+    localStorage.clear()
+    replaceTaskStore([makeTask({ title: 'Dialog seed', status: 'todo' })])
+
+    const user = userEvent.setup()
+
+    renderWithProviders(<BoardLayout />, {
+      router: { initialEntries: ['/tasks'] },
+    })
+
+    expect(screen.queryByRole('dialog', { name: 'Create task' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'New task' }))
+
+    expect(await screen.findByRole('dialog', { name: 'Create task' })).toBeInTheDocument()
+  })
 })

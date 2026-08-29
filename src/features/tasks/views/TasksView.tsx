@@ -1,22 +1,18 @@
 import { Suspense } from 'react'
 
 import { RouteFallback } from '@/app/routes/RouteFallback.tsx'
-import { LazyListView } from '@/app/routes/lazy-routes.ts'
+import { LazyBoardView, LazyListView } from '@/app/routes/lazy-routes.ts'
 import { useTaskFilters } from '@/features/tasks/filters/useTaskFilters.ts'
-import BoardView from '@/features/tasks/views/BoardView.tsx'
 
 export function TasksView() {
   const { view } = useTaskFilters()
+  const View = view === 'list' ? LazyListView : LazyBoardView
 
-  if (view === 'list') {
-    return (
-      <Suspense fallback={<RouteFallback />}>
-        <LazyListView />
-      </Suspense>
-    )
-  }
-
-  return <BoardView />
+  return (
+    <Suspense fallback={<RouteFallback />}>
+      <View />
+    </Suspense>
+  )
 }
 
 export default TasksView
