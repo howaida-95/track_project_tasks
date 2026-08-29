@@ -96,17 +96,76 @@ describe('task.rules', () => {
     expect(page.data).toHaveLength(1)
   })
 
-  it('queries with filter, sort, and pagination together', () => {
-    const result = queryTasks(tasks, {
-      q: 'a',
-      sort: 'title',
-      order: 'asc',
-      page: 1,
-      limit: 2,
+  it('filters by priority and excludes tasks without due dates in a range', () => {
+    const filtered = filterTasks(tasks, {
+      priority: ['medium'],
     })
 
-    PaginatedTasksSchema.parse(result)
-    expect(result.data.map((task) => task.title)).toEqual(['Alpha deploy', 'Beta review'])
+    expect(filtered.map((task) => task.title)).toEqual(['Gamma docs'])
+
+    const withoutDueDates = filterTasks(tasks, {
+      from: '2026-01-01',
+      to: '2026-12-31',
+    })
+
+    expect(withoutDueDates.map((task) => task.title)).toEqual(['Alpha deploy', 'Beta review'])
+  })
+
+  it('sorts by due date, title, position, and updatedAt', () => {
+    expect(sortTasks(tasks, 'dueDate', 'asc').map((task) => task.title)).toEqual([
+      'Alpha deploy',
+      'Beta review',
+      'Gamma docs',
+    ])
+
+    expect(sortTasks(tasks, 'title', 'asc').map((task) => task.title)).toEqual([
+      'Alpha deploy',
+      'Beta review',
+      'Gamma docs',
+    ])
+
+    const byUpdatedAt = [
+      makeTask({ title: 'Oldest', updatedAt: '2026-01-01T00:00:00.000Z' }),
+      makeTask({ title: 'Middle', updatedAt: '2026-01-02T00:00:00.000Z' }),
+      makeTask({ title: 'Newest', updatedAt: '2026-01-03T00:00:00.000Z' }),
+    ]
+
+    expect(sortTasks(byUpdatedAt, 'updatedAt', 'desc').map((task) => task.title)).toEqual([
+      'Newest',
+      'Middle',
+      'Oldest',
+    ])
+
+    const positioned = [
+      makeTask({ title: 'First', status: 'todo', position: 0, createdAt: '2026-01-02T00:00:00.000Z' }),
+      makeTask({ title: 'Second', status: 'todo', position: 1, createdAt: '2026-01-01T00:00:00.000Z' }),
+    ]
+
+    expect(sortTasks(positioned, 'position', 'asc').map((task) => task.title)).toEqual([
+      'First',
+      'Second',
+    ])
+  })
+
+  it('returns the original list when a move target is missing', () => {
+    const alpha = tasks[0]
+    expect(alpha).toBeDefined()
+    if (!alpha) {
+      return
+    }
+
+    expect(moveTaskInList(tasks, 'missing-task-id' as typeof alpha.id, 'done', 0)).toEqual(tasks)
+  })
+
+  it('moves a task within the same column', () => {
+    const first = makeTask({ title: 'First', status: 'todo', position: 0 })
+    const second = makeTask({ title: 'Second', status: 'todo', position: 1 })
+    const third = makeTask({ title: 'Third', status: 'todo', position: 2 })
+
+    const moved = moveTaskInList([first, second, third], third.id, 'todo', 0)
+    const grouped = groupTasksByStatus(moved)
+
+    expect(grouped.todo.map((task) => task.title)).toEqual(['Third', 'First', 'Second'])
   })
 })
 

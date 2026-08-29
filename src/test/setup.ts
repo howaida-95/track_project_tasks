@@ -1,9 +1,12 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
-import { afterAll, afterEach, beforeAll } from 'vitest'
+import * as axeMatchers from 'vitest-axe/matchers'
+import { afterAll, afterEach, beforeAll, expect } from 'vitest'
 
 import { resetTaskStore } from '@/mocks/db/task-repository.ts'
 import { server } from '@/mocks/server.ts'
+
+expect.extend(axeMatchers)
 
 class ResizeObserverStub implements ResizeObserver {
   readonly callback: ResizeObserverCallback
@@ -76,6 +79,19 @@ HTMLElement.prototype.getBoundingClientRect = function getBoundingClientRect() {
 }
 
 globalThis.ResizeObserver = ResizeObserverStub
+
+HTMLElement.prototype.setPointerCapture ??= () => undefined
+HTMLElement.prototype.releasePointerCapture ??= () => undefined
+
+HTMLCanvasElement.prototype.getContext = function getContext(contextId) {
+  if (contextId === '2d') {
+    return {
+      measureText: () => ({ width: 0 }),
+    } as CanvasRenderingContext2D
+  }
+
+  return null
+}
 
 beforeAll(() => {
   server.listen({ onUnhandledRequest: 'error' })
