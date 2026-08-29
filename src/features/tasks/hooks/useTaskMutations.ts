@@ -1,99 +1,17 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
+import {
+  applyTaskPatchInLists,
+  removeTaskFromLists,
+  replaceTaskInLists,
+  type ListSnapshot,
+} from '@/features/tasks/api/task-list-cache.ts'
 import { createTask, deleteTask, moveTask, updateTask } from '@/features/tasks/api/task.api.ts'
 import { taskKeys } from '@/features/tasks/api/task.keys.ts'
 import { toCreateTaskInput, type TaskFormValues } from '@/features/tasks/model/schemas.ts'
-import { moveTaskInList, nextPositionForStatus } from '@/features/tasks/model/task.rules.ts'
-import type {
-  MoveTaskInput,
-  PaginatedTasks,
-  Task,
-  UpdateTaskInput,
-} from '@/features/tasks/model/types.ts'
+import type { MoveTaskInput, UpdateTaskInput } from '@/features/tasks/model/types.ts'
 import type { TaskId } from '@/shared/types/branded.ts'
-
-type ListSnapshot = Array<[readonly unknown[], PaginatedTasks | undefined]>
-
-function applyTaskPatchInLists(
-  queryClient: ReturnType<typeof useQueryClient>,
-  taskId: TaskId,
-  patch: UpdateTaskInput,
-) {
-  queryClient.setQueriesData<PaginatedTasks>({ queryKey: taskKeys.lists() }, (current) => {
-    if (!current) {
-      return current
-    }
-
-    const existing = current.data.find((task) => task.id === taskId)
-
-    if (!existing) {
-      return current
-    }
-
-    const nextStatus = patch.status ?? existing.status
-    const statusChanged = nextStatus !== existing.status
-    const positionChanged = patch.position !== undefined && patch.position !== existing.position
-    const toIndex =
-      patch.position ??
-      (statusChanged ? nextPositionForStatus(current.data, nextStatus) : existing.position)
-
-    const moved =
-      statusChanged || positionChanged
-        ? moveTaskInList(current.data, taskId, nextStatus, toIndex)
-        : current.data
-
-    return {
-      ...current,
-      data: moved.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              ...patch,
-              description: patch.description ?? task.description,
-              dueDate: patch.dueDate === undefined ? task.dueDate : patch.dueDate,
-              status: task.status,
-              position: task.position,
-            }
-          : task,
-      ),
-    }
-  })
-}
-
-function replaceTaskInLists(
-  queryClient: ReturnType<typeof useQueryClient>,
-  taskId: TaskId,
-  updatedTask: Task,
-) {
-  queryClient.setQueriesData<PaginatedTasks>({ queryKey: taskKeys.lists() }, (current) => {
-    if (!current) {
-      return current
-    }
-
-    return {
-      ...current,
-      data: current.data.map((task) => (task.id === taskId ? updatedTask : task)),
-    }
-  })
-}
-
-function removeTaskFromLists(queryClient: ReturnType<typeof useQueryClient>, taskId: TaskId) {
-  queryClient.setQueriesData<PaginatedTasks>({ queryKey: taskKeys.lists() }, (current) => {
-    if (!current) {
-      return current
-    }
-
-    return {
-      ...current,
-      data: current.data.filter((task) => task.id !== taskId),
-      meta: {
-        ...current.meta,
-        total: Math.max(0, current.meta.total - 1),
-      },
-    }
-  })
-}
 
 export function useTaskMutations() {
   const queryClient = useQueryClient()
@@ -115,7 +33,7 @@ export function useTaskMutations() {
     onMutate: async ({ taskId, input }) => {
       await queryClient.cancelQueries({ queryKey: taskKeys.lists() })
 
-      const snapshots: ListSnapshot = queryClient.getQueriesData<PaginatedTasks>({
+      const snapshots: ListSnapshot = queryClient.getQueriesData({
         queryKey: taskKeys.lists(),
       })
 
@@ -148,7 +66,7 @@ export function useTaskMutations() {
     mutationFn: ({ taskId, input }: { taskId: TaskId; input: MoveTaskInput }) =>
       moveTask(taskId, input),
     onMutate: async ({ taskId, input }) => {
-      const snapshots: ListSnapshot = queryClient.getQueriesData<PaginatedTasks>({
+      const snapshots: ListSnapshot = queryClient.getQueriesData({
         queryKey: taskKeys.lists(),
       })
 
@@ -182,7 +100,7 @@ export function useTaskMutations() {
     onMutate: async (taskId) => {
       await queryClient.cancelQueries({ queryKey: taskKeys.lists() })
 
-      const snapshots: ListSnapshot = queryClient.getQueriesData<PaginatedTasks>({
+      const snapshots: ListSnapshot = queryClient.getQueriesData({
         queryKey: taskKeys.lists(),
       })
 
