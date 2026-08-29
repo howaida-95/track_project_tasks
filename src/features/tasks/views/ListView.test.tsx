@@ -30,6 +30,39 @@ describe('ListView', () => {
     expect(screen.queryByText('Hidden task')).not.toBeInTheDocument()
   })
 
+  it('applies a status filter immediately without a refresh', async () => {
+    replaceTaskStore([
+      makeTask({ title: 'Keep in list', status: 'todo' }),
+      makeTask({ title: 'Hide from list', status: 'done' }),
+    ])
+
+    const user = userEvent.setup()
+
+    renderWithProviders(
+      <>
+        <FilterBar />
+        <ListView />
+      </>,
+      {
+        router: { initialEntries: ['/tasks?view=list'] },
+      },
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('Keep in list')).toBeInTheDocument()
+      expect(screen.getByText('Hide from list')).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole('button', { name: /open filters/i }))
+    await user.click(screen.getByRole('button', { name: 'To Do' }))
+
+    await waitFor(() => {
+      expect(screen.queryByText('Hide from list')).not.toBeInTheDocument()
+    })
+
+    expect(screen.getByText('Keep in list')).toBeInTheDocument()
+  })
+
   it('writes debounced search queries to the URL', async () => {
     replaceTaskStore([makeTask({ title: 'Auth flow task', status: 'todo' })])
 
@@ -85,5 +118,28 @@ describe('ListView', () => {
     await waitFor(() => {
       expect(screen.getByText('Paginated task 6')).toBeInTheDocument()
     })
+  })
+
+  it('virtualizes long pages so off-screen rows are not mounted', async () => {
+    replaceTaskStore(
+      Array.from({ length: 40 }, (_, index) =>
+        makeTask({
+          title: `Virtual row ${index + 1}`,
+          status: 'todo',
+          createdAt: new Date(Date.UTC(2026, 0, 1, 0, 0, index)).toISOString(),
+        }),
+      ),
+    )
+
+    renderWithProviders(<ListView />, {
+      router: { initialEntries: ['/tasks?view=list&limit=40&sort=createdAt&order=asc'] },
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText('Virtual row 1')).toBeInTheDocument()
+    })
+
+    expect(screen.queryByText('Virtual row 40')).not.toBeInTheDocument()
+    expect(document.querySelector('[data-virtualized-list]')).toBeInTheDocument()
   })
 })
