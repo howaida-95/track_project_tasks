@@ -6,7 +6,8 @@ import AppProviders from '@/app/providers/AppProviders.tsx'
 import './styles/index.css'
 
 async function enableMocking(): Promise<void> {
-  if (import.meta.env.VITE_ENABLE_MOCKS !== 'true') {
+  // Default on so Vercel works without paid env vars; set VITE_ENABLE_MOCKS=false to disable.
+  if (import.meta.env.VITE_ENABLE_MOCKS === 'false') {
     return
   }
 

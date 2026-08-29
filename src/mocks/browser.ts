@@ -5,7 +5,7 @@ import { handlers } from '@/mocks/handlers/index.ts'
 export const worker = setupWorker(...handlers)
 
 export async function startMockWorker(): Promise<void> {
-  if (import.meta.env.VITE_ENABLE_MOCKS !== 'true') {
+  if (import.meta.env.VITE_ENABLE_MOCKS === 'false') {
     return
   }
 
