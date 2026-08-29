@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 import { PaginatedTasksSchema, TaskSchema } from '@/features/tasks/model/schemas.ts'
 import {
   filterTasks,
+  groupTasksByStatus,
+  moveTaskInList,
   paginateTasks,
   queryTasks,
   sortTasks,
@@ -50,6 +52,36 @@ describe('task.rules', () => {
   it('sorts by priority descending', () => {
     const sorted = sortTasks(tasks, 'priority', 'desc')
     expect(sorted.map((task) => task.priority)).toEqual(['high', 'medium', 'low'])
+  })
+
+  it('moves a task between columns and reindexes positions', () => {
+    const alpha = tasks[0]
+    const beta = tasks[1]
+    const gamma = tasks[2]
+
+    expect(alpha).toBeDefined()
+    expect(beta).toBeDefined()
+    expect(gamma).toBeDefined()
+
+    if (!alpha || !beta || !gamma) {
+      return
+    }
+
+    const moved = moveTaskInList(
+      [
+        makeTask({ ...alpha, position: 0 }),
+        makeTask({ ...beta, position: 0 }),
+        makeTask({ ...gamma, position: 0 }),
+      ],
+      alpha.id,
+      'done',
+      0,
+    )
+
+    const grouped = groupTasksByStatus(moved)
+    expect(grouped.todo).toHaveLength(0)
+    expect(grouped.done.map((task) => task.title)).toEqual(['Alpha deploy', 'Gamma docs'])
+    expect(grouped.done.map((task) => task.position)).toEqual([0, 1])
   })
 
   it('paginates results', () => {

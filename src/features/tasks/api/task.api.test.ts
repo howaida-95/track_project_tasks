@@ -6,6 +6,7 @@ import {
   deleteTask,
   getTask,
   listTasks,
+  moveTask,
   updateTask,
 } from '@/features/tasks/api/task.api.ts'
 import { serializeTaskListParams } from '@/features/tasks/api/task-params.ts'
@@ -19,8 +20,8 @@ describe('task.api', () => {
   beforeEach(() => {
     localStorage.clear()
     replaceTaskStore([
-      makeTask({ title: 'API alpha', status: 'todo' }),
-      makeTask({ title: 'API beta', status: 'in_progress' }),
+      makeTask({ title: 'API alpha', status: 'todo', position: 0 }),
+      makeTask({ title: 'API beta', status: 'in_progress', position: 0 }),
     ])
   })
 
@@ -49,6 +50,10 @@ describe('task.api', () => {
     const updated = await updateTask(created.id, { status: 'done' })
     expect(updated.status).toBe('done')
 
+    const moved = await moveTask(created.id, { status: 'todo', position: 0 })
+    expect(moved.status).toBe('todo')
+    expect(moved.position).toBe(0)
+
     await deleteTask(created.id)
 
     await expect(getTask(created.id)).rejects.toBeInstanceOf(ApiError)
@@ -76,6 +81,7 @@ describe('task.api', () => {
           createdAt: 'not-a-datetime',
           updatedAt: 'not-a-datetime',
           tags: [],
+          position: 0,
         }),
       ),
     )

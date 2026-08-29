@@ -3,7 +3,7 @@ import { createTaskId } from '@/shared/types/branded.ts'
 import { type TaskPriority, type TaskStatus } from '@/shared/types/task-ui.ts'
 
 export const SEED_TASK_COUNT = 1200
-export const SEED_VERSION = 1 as const
+export const SEED_VERSION = 2 as const
 
 const TITLE_PREFIXES = [
   'Implement',
@@ -119,6 +119,12 @@ function weightedPriority(random: () => number): TaskPriority {
 export function generateSeedTasks(count = SEED_TASK_COUNT, seed = 42): Task[] {
   const random = mulberry32(seed)
   const now = Date.now()
+  const nextPosition: Record<TaskStatus, number> = {
+    todo: 0,
+    in_progress: 0,
+    in_review: 0,
+    done: 0,
+  }
 
   return Array.from({ length: count }, (_, index) => {
     const createdOffsetDays = Math.floor(random() * 120)
@@ -127,6 +133,9 @@ export function generateSeedTasks(count = SEED_TASK_COUNT, seed = 42): Task[] {
     const hasDueDate = random() > 0.15
     const dueOffsetDays = Math.floor(random() * 90) - 30
     const dueDate = hasDueDate ? toDateString(new Date(now + dueOffsetDays * 86_400_000)) : null
+    const status = weightedStatus(random)
+    const position = nextPosition[status]
+    nextPosition[status] += 1
 
     const title = `${pick(random, TITLE_PREFIXES)} ${pick(random, TITLE_SUBJECTS)} #${index + 1}`
 
@@ -134,12 +143,13 @@ export function generateSeedTasks(count = SEED_TASK_COUNT, seed = 42): Task[] {
       id: createTaskId(),
       title,
       description: `Seeded task ${index + 1} for local development and demo filtering.`,
-      status: weightedStatus(random),
+      status,
       priority: weightedPriority(random),
       dueDate,
       createdAt: createdAt.toISOString(),
       updatedAt: updatedAt.toISOString(),
       tags: pickMany(random, TAG_POOL, 3),
+      position,
     }
   })
 }

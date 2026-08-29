@@ -1,5 +1,9 @@
 import { CreateTaskSchema, UpdateTaskSchema } from '@/features/tasks/model/schemas.ts'
-import { queryTasks } from '@/features/tasks/model/task.rules.ts'
+import {
+  moveTaskInList,
+  nextPositionForStatus,
+  queryTasks,
+} from '@/features/tasks/model/task.rules.ts'
 import type {
   CreateTaskInput,
   PaginatedTasks,
@@ -45,6 +49,8 @@ export function createStoredTask(
 ): Task {
   const payload = CreateTaskSchema.parse(input)
   const now = new Date().toISOString()
+  const snapshot = readTaskStore(storage as Storage)
+  const position = payload.position ?? nextPositionForStatus(snapshot.tasks, payload.status)
 
   const task: Task = {
     id: createTaskId(),
@@ -56,6 +62,7 @@ export function createStoredTask(
     createdAt: now,
     updatedAt: now,
     tags: payload.tags ?? [],
+    position,
   }
 
   withTasks(storage, (tasks) => [task, ...tasks])
@@ -70,28 +77,53 @@ export function updateStoredTask(
   const payload = UpdateTaskSchema.parse(input)
   let updated: Task | null = null
 
-  withTasks(storage, (tasks) =>
-    tasks.map((task) => {
+  withTasks(storage, (tasks) => {
+    const current = tasks.find((task) => task.id === id)
+
+    if (!current) {
+      return tasks
+    }
+
+    const patched: Task = {
+      id: current.id,
+      title: payload.title ?? current.title,
+      description: payload.description ?? current.description,
+      status: payload.status ?? current.status,
+      priority: payload.priority ?? current.priority,
+      dueDate: payload.dueDate === undefined ? current.dueDate : payload.dueDate,
+      tags: payload.tags ?? current.tags,
+      createdAt: current.createdAt,
+      updatedAt: new Date().toISOString(),
+      position: current.position,
+    }
+
+    const statusChanged = patched.status !== current.status
+    const positionChanged = payload.position !== undefined && payload.position !== current.position
+
+    if (!statusChanged && !positionChanged) {
+      updated = patched
+      return tasks.map((task) => (task.id === id ? patched : task))
+    }
+
+    const toIndex =
+      payload.position ??
+      (statusChanged ? nextPositionForStatus(tasks, patched.status) : current.position)
+    const moved = moveTaskInList(tasks, id, patched.status, toIndex)
+
+    return moved.map((task) => {
       if (task.id !== id) {
         return task
       }
 
       const nextTask: Task = {
-        id: task.id,
-        title: payload.title ?? task.title,
-        description: payload.description ?? task.description,
-        status: payload.status ?? task.status,
-        priority: payload.priority ?? task.priority,
-        dueDate: payload.dueDate === undefined ? task.dueDate : payload.dueDate,
-        tags: payload.tags ?? task.tags,
-        createdAt: task.createdAt,
-        updatedAt: new Date().toISOString(),
+        ...patched,
+        status: task.status,
+        position: task.position,
       }
-
       updated = nextTask
       return nextTask
-    }),
-  )
+    })
+  })
 
   return updated
 }

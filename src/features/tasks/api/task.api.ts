@@ -1,8 +1,9 @@
 import type { AxiosRequestConfig } from 'axios'
 
-import { PaginatedTasksSchema, TaskSchema } from '@/features/tasks/model/schemas.ts'
+import { MoveTaskSchema, PaginatedTasksSchema, TaskSchema } from '@/features/tasks/model/schemas.ts'
 import type {
   CreateTaskInput,
+  MoveTaskInput,
   PaginatedTasks,
   Task,
   TaskListParams,
@@ -69,6 +70,19 @@ export async function updateTask(
   })
 
   return parseResponse(TaskSchema, response.data, 'updateTask') as Task
+}
+
+export async function moveTask(
+  taskId: TaskId,
+  input: MoveTaskInput,
+  options: RequestOptions = {},
+): Promise<Task> {
+  const payload = MoveTaskSchema.parse(input)
+  const response = await axiosClient.patch<unknown>(`${TASKS_PATH}/${taskId}`, payload, {
+    ...withRequestOptions(options),
+  })
+
+  return parseResponse(TaskSchema, response.data, 'moveTask') as Task
 }
 
 export async function deleteTask(taskId: TaskId, options: RequestOptions = {}): Promise<void> {

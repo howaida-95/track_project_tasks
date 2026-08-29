@@ -16,6 +16,7 @@ export const TaskSchema = z.object({
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
   tags: z.array(z.string().min(1).max(40)).max(10),
+  position: z.number().int().nonnegative(),
 })
 
 export const CreateTaskSchema = z.object({
@@ -25,9 +26,15 @@ export const CreateTaskSchema = z.object({
   priority: z.enum(TASK_PRIORITIES),
   dueDate: z.string().date().nullable().optional(),
   tags: z.array(z.string().min(1).max(40)).max(10).optional(),
+  position: z.number().int().nonnegative().optional(),
 })
 
 export const UpdateTaskSchema = CreateTaskSchema.partial()
+
+export const MoveTaskSchema = z.object({
+  status: z.enum(TASK_STATUSES),
+  position: z.number().int().nonnegative(),
+})
 
 export const TaskFiltersSchema = z.object({
   q: z.string().trim().optional(),
@@ -40,7 +47,9 @@ export const TaskFiltersSchema = z.object({
 export const PaginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(50),
-  sort: z.enum(['createdAt', 'dueDate', 'priority', 'title', 'updatedAt']).default('createdAt'),
+  sort: z
+    .enum(['createdAt', 'dueDate', 'position', 'priority', 'title', 'updatedAt'])
+    .default('createdAt'),
   order: z.enum(['asc', 'desc']).default('desc'),
 })
 
