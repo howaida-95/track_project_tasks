@@ -15,6 +15,19 @@
     @apply sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground focus:shadow-md;
   }
 
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  a[href],
+  summary {
+    @apply cursor-pointer;
+  }
+
+  button:disabled,
+  [role='button'][aria-disabled='true'],
+  a[aria-disabled='true'] {
+    @apply cursor-not-allowed;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
