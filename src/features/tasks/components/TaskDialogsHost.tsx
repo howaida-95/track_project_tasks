@@ -53,8 +53,12 @@ export function TaskDialogsHost() {
 
   const handleCreateSubmit = useCallback(
     async (values: TaskFormValues) => {
-      await createTaskMutation.mutateAsync(values)
-      dispatch(closeDialog())
+      try {
+        await createTaskMutation.mutateAsync(values)
+        dispatch(closeDialog())
+      } catch {
+        // Toast handled in mutation onError; keep the dialog open for retry.
+      }
     },
     [createTaskMutation, dispatch],
   )
@@ -65,11 +69,15 @@ export function TaskDialogsHost() {
         return
       }
 
-      await updateTaskMutation.mutateAsync({
-        taskId: editTaskId,
-        input: toCreateTaskInput(values),
-      })
-      dispatch(closeDialog())
+      try {
+        await updateTaskMutation.mutateAsync({
+          taskId: editTaskId,
+          input: toCreateTaskInput(values),
+        })
+        dispatch(closeDialog())
+      } catch {
+        // Toast + rollback handled in mutation onError; keep the dialog open.
+      }
     },
     [dispatch, editTaskId, updateTaskMutation],
   )
@@ -79,8 +87,12 @@ export function TaskDialogsHost() {
       return
     }
 
-    await deleteTaskMutation.mutateAsync(deleteTaskId)
-    dispatch(closeDialog())
+    try {
+      await deleteTaskMutation.mutateAsync(deleteTaskId)
+      dispatch(closeDialog())
+    } catch {
+      // Toast + rollback handled in mutation onError; keep the confirm dialog open.
+    }
   }, [deleteTaskId, deleteTaskMutation, dispatch])
 
   const createFormDefaults = createStatus ? { status: createStatus } : undefined
