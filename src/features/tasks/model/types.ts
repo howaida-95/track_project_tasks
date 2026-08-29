@@ -11,6 +11,7 @@ export type Task = {
   createdAt: string
   updatedAt: string
   tags: string[]
+  position: number
 }
 
 export type CreateTaskInput = {
@@ -20,11 +21,18 @@ export type CreateTaskInput = {
   priority: TaskPriority
   dueDate?: string | null
   tags?: string[]
+  position?: number
 }
 
 export type UpdateTaskInput = Partial<CreateTaskInput>
 
-export type TaskSortField = 'createdAt' | 'dueDate' | 'priority' | 'title' | 'updatedAt'
+export type MoveTaskInput = {
+  status: TaskStatus
+  position: number
+}
+
+export type TaskSortField =
+  'createdAt' | 'dueDate' | 'position' | 'priority' | 'title' | 'updatedAt'
 
 export type SortOrder = 'asc' | 'desc'
 

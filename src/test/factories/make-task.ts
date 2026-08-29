@@ -17,6 +17,7 @@ export function makeTask(overrides: MakeTaskOverrides = {}): Task {
     createdAt: overrides.createdAt ?? now,
     updatedAt: overrides.updatedAt ?? now,
     tags: overrides.tags ?? ['test'],
+    position: overrides.position ?? 0,
   }
 }
 

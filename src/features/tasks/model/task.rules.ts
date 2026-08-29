@@ -6,7 +6,10 @@ import type {
   TaskListParams,
   TaskSortField,
 } from '@/features/tasks/model/types.ts'
-import type { TaskPriority } from '@/shared/types/task-ui.ts'
+import type { TaskId } from '@/shared/types/branded.ts'
+import { TASK_STATUSES, type TaskPriority, type TaskStatus } from '@/shared/types/task-ui.ts'
+
+export type TasksByStatus = Record<TaskStatus, Task[]>
 
 const PRIORITY_RANK: Record<TaskPriority, number> = {
   low: 1,
@@ -93,6 +96,14 @@ export function sortTasks(
           : PRIORITY_RANK[right.priority] - PRIORITY_RANK[left.priority]
       case 'updatedAt':
         return compareStrings(left.updatedAt, right.updatedAt, order)
+      case 'position': {
+        const byPosition =
+          order === 'asc' ? left.position - right.position : right.position - left.position
+        if (byPosition !== 0) {
+          return byPosition
+        }
+        return compareStrings(left.createdAt, right.createdAt, 'asc')
+      }
       case 'createdAt':
       default:
         return compareStrings(left.createdAt, right.createdAt, order)
@@ -126,4 +137,94 @@ export function queryTasks(tasks: Task[], params: TaskListParams): PaginatedTask
   const filtered = filterTasks(tasks, params)
   const sorted = sortTasks(filtered, params.sort, params.order)
   return paginateTasks(sorted, params)
+}
+
+export function emptyTasksByStatus(): TasksByStatus {
+  return {
+    todo: [],
+    in_progress: [],
+    in_review: [],
+    done: [],
+  }
+}
+
+export function groupTasksByStatus(tasks: Task[]): TasksByStatus {
+  const groups = emptyTasksByStatus()
+
+  for (const task of tasks) {
+    groups[task.status].push(task)
+  }
+
+  for (const status of TASK_STATUSES) {
+    groups[status] = sortTasks(groups[status], 'position', 'asc')
+  }
+
+  return groups
+}
+
+export function nextPositionForStatus(tasks: Task[], status: TaskStatus): number {
+  return tasks.reduce((maxPosition, task) => {
+    if (task.status !== status) {
+      return maxPosition
+    }
+
+    return Math.max(maxPosition, task.position + 1)
+  }, 0)
+}
+
+function reindexColumn(column: Task[], status: TaskStatus): Task[] {
+  return column.map((task, index) => {
+    if (task.status === status && task.position === index) {
+      return task
+    }
+
+    return {
+      ...task,
+      status,
+      position: index,
+    }
+  })
+}
+
+export function moveTaskInList(
+  tasks: Task[],
+  taskId: TaskId,
+  toStatus: TaskStatus,
+  toIndex: number,
+): Task[] {
+  const task = tasks.find((candidate) => candidate.id === taskId)
+
+  if (!task) {
+    return tasks
+  }
+
+  const groups = groupTasksByStatus(tasks)
+  const fromStatus = task.status
+  const fromColumn = groups[fromStatus].filter((candidate) => candidate.id !== taskId)
+  const destinationColumn = fromStatus === toStatus ? fromColumn : groups[toStatus]
+  const clampedIndex = Math.max(0, Math.min(toIndex, destinationColumn.length))
+  const nextDestination = [
+    ...destinationColumn.slice(0, clampedIndex),
+    task,
+    ...destinationColumn.slice(clampedIndex),
+  ]
+
+  const nextGroups: TasksByStatus = {
+    ...groups,
+    [fromStatus]:
+      fromStatus === toStatus
+        ? reindexColumn(nextDestination, toStatus)
+        : reindexColumn(fromColumn, fromStatus),
+    [toStatus]: reindexColumn(nextDestination, toStatus),
+  }
+
+  const updatedById = new Map<TaskId, Task>()
+
+  for (const status of TASK_STATUSES) {
+    for (const columnTask of nextGroups[status]) {
+      updatedById.set(columnTask.id, columnTask)
+    }
+  }
+
+  return tasks.map((candidate) => updatedById.get(candidate.id) ?? candidate)
 }

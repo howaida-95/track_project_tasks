@@ -24,6 +24,8 @@ describe('task repository', () => {
   })
 
   it('creates, updates, and deletes tasks', () => {
+    replaceTaskStore([])
+
     const created = createStoredTask({
       title: 'New task',
       status: 'todo',
@@ -34,9 +36,29 @@ describe('task repository', () => {
 
     const updated = updateStoredTask(created.id, { status: 'done' })
     expect(updated?.status).toBe('done')
+    expect(updated?.position).toBe(0)
 
     expect(deleteStoredTask(created.id)).toBe(true)
     expect(getStoredTask(created.id)).toBeNull()
+  })
+
+  it('reindexes column positions when a task is moved', () => {
+    replaceTaskStore([
+      makeTask({ title: 'Todo first', status: 'todo', position: 0 }),
+      makeTask({ title: 'Todo second', status: 'todo', position: 1 }),
+      makeTask({ title: 'Doing now', status: 'in_progress', position: 0 }),
+    ])
+
+    const first = listStoredTasks({ status: ['todo'], sort: 'position', order: 'asc' }).data[0]
+    const moved = first ? updateStoredTask(first.id, { status: 'in_progress', position: 0 }) : null
+
+    expect(moved?.status).toBe('in_progress')
+    expect(moved?.position).toBe(0)
+    expect(
+      listStoredTasks({ status: ['in_progress'], sort: 'position', order: 'asc' }).data.map(
+        (task) => task.title,
+      ),
+    ).toEqual(['Todo first', 'Doing now'])
   })
 
   it('lists tasks with filters and pagination', () => {
