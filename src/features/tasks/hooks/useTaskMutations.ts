@@ -12,6 +12,7 @@ import { taskKeys } from '@/features/tasks/api/task.keys.ts'
 import { toCreateTaskInput, type TaskFormValues } from '@/features/tasks/model/schemas.ts'
 import type { MoveTaskInput, UpdateTaskInput } from '@/features/tasks/model/types.ts'
 import type { TaskId } from '@/shared/types/branded.ts'
+import { reportError } from '@/shared/lib/logger.ts'
 
 export function useTaskMutations() {
   const queryClient = useQueryClient()
@@ -22,7 +23,8 @@ export function useTaskMutations() {
       toast.success('Task created')
       void queryClient.invalidateQueries({ queryKey: taskKeys.all })
     },
-    onError: () => {
+    onError: (error) => {
+      reportError(error, { mutation: 'createTask' })
       toast.error('Failed to create task')
     },
   })
@@ -41,7 +43,8 @@ export function useTaskMutations() {
 
       return { snapshots }
     },
-    onError: (_error, variables, context) => {
+    onError: (error, variables, context) => {
+      reportError(error, { mutation: 'updateTask', taskId: variables.taskId })
       context?.snapshots.forEach(([key, data]) => {
         queryClient.setQueryData(key, data)
       })
@@ -75,7 +78,8 @@ export function useTaskMutations() {
 
       return { snapshots }
     },
-    onError: (_error, variables, context) => {
+    onError: (error, variables, context) => {
+      reportError(error, { mutation: 'moveTask', taskId: variables.taskId })
       context?.snapshots.forEach(([key, data]) => {
         queryClient.setQueryData(key, data)
       })
@@ -108,7 +112,8 @@ export function useTaskMutations() {
 
       return { snapshots, taskId }
     },
-    onError: (_error, _taskId, context) => {
+    onError: (error, taskId, context) => {
+      reportError(error, { mutation: 'deleteTask', taskId })
       context?.snapshots.forEach(([key, data]) => {
         queryClient.setQueryData(key, data)
       })
