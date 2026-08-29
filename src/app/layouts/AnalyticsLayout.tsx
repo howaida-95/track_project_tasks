@@ -13,10 +13,6 @@ export function AnalyticsLayout() {
         <h1 className="truncate text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
           Analytics
         </h1>
-        <p className="max-w-2xl text-sm text-muted-foreground">
-          Snapshot of the current task catalog by status and priority. Charts and date ranges can
-          land later without changing this route.
-        </p>
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border/60 bg-card/50 p-2 shadow-sm backdrop-blur-sm sm:p-3 xl:p-4">
