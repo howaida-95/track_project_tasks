@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:analyze": "tsc -b && vite build --mode analyze",
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -26,6 +27,7 @@
     "@reduxjs/toolkit": "^2.12.0",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-query": "^5.102.8",
+    "@tanstack/react-virtual": "^3.14.10",
     "axios": "^1.20.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -71,6 +73,7 @@
     "lint-staged": "^16.4.0",
     "msw": "^2.15.0",
     "prettier": "^3.9.6",
+    "rollup-plugin-visualizer": "^7.1.1",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.67.0",
     "vite": "^8.2.2",
