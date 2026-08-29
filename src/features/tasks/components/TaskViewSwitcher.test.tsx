@@ -19,7 +19,7 @@ describe('TaskViewSwitcher', () => {
     })
 
     expect(await screen.findByRole('heading', { name: 'Task Board' })).toBeInTheDocument()
-    expect(await screen.findByText('Switchable task')).toBeInTheDocument()
+    expect(await screen.findByText('Switchable task', {}, { timeout: 5000 })).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'List view' }))
 

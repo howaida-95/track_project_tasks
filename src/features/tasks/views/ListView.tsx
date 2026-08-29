@@ -31,13 +31,6 @@ export function ListView() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <header className="mb-4 shrink-0">
-        <h1 className="text-2xl font-bold tracking-tight">Task List</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Filtered table view synced with the board via URL query params.
-        </p>
-      </header>
-
       <QueryState
         isLoading={isLoading}
         isError={isError}
