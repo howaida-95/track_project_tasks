@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom'
 
 import { RoutePanelBoundary } from '@/app/layouts/RoutePanelBoundary.tsx'
+import { OfflineBanner } from '@/shared/components/OfflineBanner.tsx'
 
 export function RootLayout() {
   return (
@@ -8,6 +9,8 @@ export function RootLayout() {
       <a href="#main-content" className="skip-link">
         Skip to main content
       </a>
+
+      <OfflineBanner />
 
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">

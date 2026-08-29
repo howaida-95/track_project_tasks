@@ -24,6 +24,9 @@ export function AppProviders({ children }: AppProvidersProps) {
             retry: shouldRetryQuery,
             retryDelay: getRetryDelay,
           },
+          mutations: {
+            networkMode: 'offlineFirst',
+          },
         },
       }),
   )
