@@ -16,9 +16,10 @@ import {
   listStoredTasks,
   updateStoredTask,
 } from '@/mocks/db/task-repository.ts'
+import { getApiBaseUrl } from '@/shared/api/api-base-url.ts'
 import { toTaskId } from '@/shared/types/branded.ts'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
+const API_BASE = getApiBaseUrl()
 
 function problem(status: number, message: string, details?: Record<string, string[]>): ApiProblem {
   return details ? { status, message, details } : { status, message }

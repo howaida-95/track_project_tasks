@@ -1,5 +1,6 @@
 import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from 'axios'
 
+import { getApiBaseUrl } from '@/shared/api/api-base-url.ts'
 import { mapAxiosError } from '@/shared/api/map-axios-error.ts'
 
 function attachRequestMetadata(config: InternalAxiosRequestConfig): InternalAxiosRequestConfig {
@@ -10,7 +11,7 @@ function attachRequestMetadata(config: InternalAxiosRequestConfig): InternalAxio
 }
 
 export const axiosClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api',
+  baseURL: getApiBaseUrl(),
   timeout: 10_000,
   headers: {
     Accept: 'application/json',

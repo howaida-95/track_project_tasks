@@ -5,10 +5,11 @@ import {
   TaskSchema,
   TaskStatsSchema,
 } from '@/features/tasks/model/schemas.ts'
+import { getApiBaseUrl } from '@/shared/api/api-base-url.ts'
 import { replaceTaskStore } from '@/mocks/db/task-store.ts'
 import { makeTask } from '@/test/factories/make-task.ts'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
+const API_BASE = getApiBaseUrl()
 
 describe('task handlers', () => {
   beforeEach(() => {
