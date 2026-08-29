@@ -31,10 +31,11 @@ import {
 import { BoardColumn } from '@/features/tasks/components/BoardColumn.tsx'
 import { TaskCard } from '@/features/tasks/components/TaskCard.tsx'
 import { useTaskFilters } from '@/features/tasks/filters/useTaskFilters.ts'
+import { useColumnTasks } from '@/features/tasks/hooks/useColumnTasks.ts'
 import { useTaskDialogActions } from '@/features/tasks/hooks/useTaskDialogActions.ts'
 import { useTaskMutations } from '@/features/tasks/hooks/useTaskMutations.ts'
-import { useTasks } from '@/features/tasks/hooks/useTasks.ts'
-import { emptyTasksByStatus, groupTasksByStatus } from '@/features/tasks/model/task.rules.ts'
+import { isBoardColumnEnabled } from '@/features/tasks/model/pagination.ts'
+import { emptyTasksByStatus } from '@/features/tasks/model/task.rules.ts'
 import type { TasksByStatus } from '@/features/tasks/model/task.rules.ts'
 import type { Task } from '@/features/tasks/model/types.ts'
 import { QueryState } from '@/shared/components/query-state.tsx'
@@ -53,18 +54,35 @@ export function BoardView() {
   const { openCreate, openEdit, openDelete } = useTaskDialogActions()
   const { moveTaskMutation } = useTaskMutations()
   const { listParams } = useTaskFilters()
-  const boardParams = useMemo(
-    () => ({
-      ...listParams,
-      limit: Math.max(listParams.limit ?? 50, 100),
-      sort: 'position' as const,
-      order: 'asc' as const,
-    }),
-    [listParams],
-  )
-  const { data, isLoading, isError, error, refetch } = useTasks(boardParams)
+  const todoQuery = useColumnTasks('todo', listParams)
+  const inProgressQuery = useColumnTasks('in_progress', listParams)
+  const inReviewQuery = useColumnTasks('in_review', listParams)
+  const doneQuery = useColumnTasks('done', listParams)
+  const columnQueries = {
+    todo: todoQuery,
+    in_progress: inProgressQuery,
+    in_review: inReviewQuery,
+    done: doneQuery,
+  }
 
-  const tasksByStatus = useMemo(() => groupTasksByStatus(data?.data ?? []), [data?.data])
+  const enabledStatuses = TASK_STATUSES.filter((status) => isBoardColumnEnabled(listParams, status))
+  const isLoading = enabledStatuses.some((status) => columnQueries[status].isLoading)
+  const isError = enabledStatuses.some((status) => columnQueries[status].isError)
+  const error = enabledStatuses
+    .map((status) => columnQueries[status].error)
+    .find((queryError): queryError is Error => queryError instanceof Error)
+
+  const tasksByStatus = useMemo(
+    () => ({
+      todo: todoQuery.data?.pages.flatMap((page) => page.data) ?? [],
+      in_progress: inProgressQuery.data?.pages.flatMap((page) => page.data) ?? [],
+      in_review: inReviewQuery.data?.pages.flatMap((page) => page.data) ?? [],
+      done: doneQuery.data?.pages.flatMap((page) => page.data) ?? [],
+    }),
+    [doneQuery.data, inProgressQuery.data, inReviewQuery.data, todoQuery.data],
+  )
+  const isEmpty =
+    !isLoading && !isError && enabledStatuses.every((status) => tasksByStatus[status].length === 0)
   const [draggingColumns, setDraggingColumns] = useState<TasksByStatus | null>(null)
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null)
   const columns = draggingColumns ?? tasksByStatus
@@ -241,10 +259,6 @@ export function BoardView() {
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <header className="mb-4 shrink-0">
         <h1 className="text-2xl font-bold tracking-tight">Task Board</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Drag tasks between columns with the handle, or use the keyboard: space to pick up, arrows
-          to move, space to drop.
-        </p>
         <p id={BOARD_DND_INSTRUCTIONS_ID} className="sr-only">
           {BOARD_SCREEN_READER_INSTRUCTIONS.draggable}
         </p>
@@ -254,10 +268,12 @@ export function BoardView() {
         <QueryState
           isLoading={isLoading}
           isError={isError}
-          isEmpty={!isLoading && !isError && (data?.data.length ?? 0) === 0}
-          error={error}
+          isEmpty={isEmpty}
+          error={error ?? null}
           onRetry={() => {
-            void refetch()
+            enabledStatuses.forEach((status) => {
+              void columnQueries[status].refetch()
+            })
           }}
         >
           <DndContext
@@ -278,17 +294,27 @@ export function BoardView() {
             onDragCancel={handleDragCancel}
           >
             <div className="flex h-full min-h-0 flex-1 gap-4 overflow-x-auto overflow-y-hidden xl:overflow-x-hidden">
-              {TASK_STATUSES.map((status) => (
-                <BoardColumn
-                  key={status}
-                  status={status}
-                  tasks={columns[status] ?? emptyTasksByStatus()[status]}
-                  isDropTarget={dropStatus === status}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onAdd={() => openCreate(status)}
-                />
-              ))}
+              {TASK_STATUSES.map((status) => {
+                const query = columnQueries[status]
+                const loaded = columns[status] ?? emptyTasksByStatus()[status]
+                const totalCount = query.data?.pages[0]?.meta.total ?? loaded.length
+
+                return (
+                  <BoardColumn
+                    key={status}
+                    status={status}
+                    tasks={loaded}
+                    totalCount={totalCount}
+                    hasNextPage={query.hasNextPage}
+                    isFetchingNextPage={query.isFetchingNextPage}
+                    isDropTarget={dropStatus === status}
+                    onLoadMore={query.fetchNextPage}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onAdd={() => openCreate(status)}
+                  />
+                )
+              })}
             </div>
 
             <DragOverlay dropAnimation={null}>

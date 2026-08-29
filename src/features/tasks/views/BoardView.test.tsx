@@ -1,8 +1,10 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { Toaster } from 'sonner'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { FilterBar } from '@/features/tasks/filters/FilterBar.tsx'
 import BoardView from '@/features/tasks/views/BoardView.tsx'
 import { server } from '@/mocks/server.ts'
 import { replaceTaskStore } from '@/mocks/db/task-store.ts'
@@ -100,6 +102,39 @@ describe('BoardView', () => {
     expect(screen.getByRole('button', { name: 'Move Board task alpha' })).toBeInTheDocument()
   })
 
+  it('applies a status filter immediately without a refresh', async () => {
+    replaceTaskStore([
+      makeTask({ title: 'Keep on board', status: 'todo', position: 0 }),
+      makeTask({ title: 'Hide from board', status: 'done', position: 0 }),
+    ])
+
+    const user = userEvent.setup()
+
+    renderWithProviders(
+      <>
+        <FilterBar />
+        <BoardView />
+      </>,
+      {
+        router: { initialEntries: ['/tasks'] },
+      },
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('Keep on board')).toBeInTheDocument()
+      expect(screen.getByText('Hide from board')).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole('button', { name: /open filters/i }))
+    await user.click(screen.getByRole('button', { name: 'To Do' }))
+
+    await waitFor(() => {
+      expect(screen.queryByText('Hide from board')).not.toBeInTheDocument()
+    })
+
+    expect(screen.getByText('Keep on board')).toBeInTheDocument()
+  })
+
   it('moves a task between columns with the keyboard', async () => {
     replaceTaskStore([
       makeTask({ title: 'Board task alpha', status: 'todo', position: 0 }),
@@ -151,5 +186,64 @@ describe('BoardView', () => {
 
     expect(within(column('To Do')).getByText('Board task alpha')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
+  })
+
+  it('virtualizes long columns so off-screen cards are not mounted', async () => {
+    replaceTaskStore(
+      Array.from({ length: 30 }, (_, index) =>
+        makeTask({
+          title: `Column card ${index + 1}`,
+          status: 'todo',
+          position: index,
+        }),
+      ),
+    )
+
+    renderWithProviders(<BoardView />, {
+      router: { initialEntries: ['/tasks'] },
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText('Column card 1')).toBeInTheDocument()
+    })
+
+    expect(screen.queryByText('Column card 30')).not.toBeInTheDocument()
+    expect(document.querySelector('[data-virtualized-column="todo"]')).toBeInTheDocument()
+  })
+
+  it('loads board columns in pages instead of fetching the whole column at once', async () => {
+    replaceTaskStore(
+      Array.from({ length: 60 }, (_, index) =>
+        makeTask({
+          title: `Paged card ${index + 1}`,
+          status: 'todo',
+          position: index,
+        }),
+      ),
+    )
+
+    renderWithProviders(<BoardView />, {
+      router: { initialEntries: ['/tasks'] },
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText('Paged card 1')).toBeInTheDocument()
+    })
+
+    expect(within(column('To Do')).getByText('25 / 60')).toBeInTheDocument()
+    expect(screen.queryByText('Paged card 26')).not.toBeInTheDocument()
+
+    const scroller = document.querySelector('[data-virtualized-column="todo"]')
+    expect(scroller).toBeInstanceOf(HTMLElement)
+
+    if (!(scroller instanceof HTMLElement)) {
+      throw new Error('Expected a virtualized todo column')
+    }
+
+    await waitFor(() => {
+      scroller.scrollTop = 20_000
+      fireEvent.scroll(scroller)
+      expect(screen.getByText('Paged card 26')).toBeInTheDocument()
+    })
   })
 })
