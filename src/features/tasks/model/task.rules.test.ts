@@ -96,6 +96,19 @@ describe('task.rules', () => {
     expect(page.data).toHaveLength(1)
   })
 
+  it('queries with filter, sort, and pagination together', () => {
+    const result = queryTasks(tasks, {
+      q: 'a',
+      sort: 'title',
+      order: 'asc',
+      page: 1,
+      limit: 2,
+    })
+
+    PaginatedTasksSchema.parse(result)
+    expect(result.data.map((task) => task.title)).toEqual(['Alpha deploy', 'Beta review'])
+  })
+
   it('filters by priority and excludes tasks without due dates in a range', () => {
     const filtered = filterTasks(tasks, {
       priority: ['medium'],
@@ -137,8 +150,18 @@ describe('task.rules', () => {
     ])
 
     const positioned = [
-      makeTask({ title: 'First', status: 'todo', position: 0, createdAt: '2026-01-02T00:00:00.000Z' }),
-      makeTask({ title: 'Second', status: 'todo', position: 1, createdAt: '2026-01-01T00:00:00.000Z' }),
+      makeTask({
+        title: 'First',
+        status: 'todo',
+        position: 0,
+        createdAt: '2026-01-02T00:00:00.000Z',
+      }),
+      makeTask({
+        title: 'Second',
+        status: 'todo',
+        position: 1,
+        createdAt: '2026-01-01T00:00:00.000Z',
+      }),
     ]
 
     expect(sortTasks(positioned, 'position', 'asc').map((task) => task.title)).toEqual([
