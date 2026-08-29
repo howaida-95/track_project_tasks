@@ -120,3 +120,5 @@ export function TaskDialogsHost() {
     </>
   )
 }
+
+export default TaskDialogsHost

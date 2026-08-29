@@ -1,3 +1,4 @@
+import { DEFAULT_PAGE_SIZE } from '@/features/tasks/model/pagination.ts'
 import { TaskListParamsSchema } from '@/features/tasks/model/schemas.ts'
 import type { TaskListParams } from '@/features/tasks/model/types.ts'
 import { serializeTaskView, type TaskView } from '@/features/tasks/filters/task-view.ts'
@@ -130,7 +131,7 @@ export function mergeTaskListParams(
 ): TaskListParams {
   const merged: TaskListParams = {
     page: patch.page ?? current.page ?? 1,
-    limit: patch.limit ?? current.limit ?? 50,
+    limit: patch.limit ?? current.limit ?? DEFAULT_PAGE_SIZE,
     sort: patch.sort ?? current.sort ?? 'createdAt',
     order: patch.order ?? current.order ?? 'desc',
   }

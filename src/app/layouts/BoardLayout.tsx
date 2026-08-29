@@ -1,7 +1,7 @@
 import { PlusIcon } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { TaskDialogsHost } from '@/features/tasks/components/TaskDialogsHost.tsx'
+import { TaskDialogsGate } from '@/features/tasks/components/TaskDialogsGate.tsx'
 import { TaskViewSwitcher } from '@/features/tasks/components/TaskViewSwitcher.tsx'
 import { FilterBar } from '@/features/tasks/filters/FilterBar.tsx'
 import { useTaskDialogActions } from '@/features/tasks/hooks/useTaskDialogActions.ts'
@@ -26,7 +26,7 @@ export function BoardLayout() {
         <TasksView />
       </div>
 
-      <TaskDialogsHost />
+      <TaskDialogsGate />
     </div>
   )
 }

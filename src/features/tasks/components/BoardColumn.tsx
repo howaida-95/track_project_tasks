@@ -1,18 +1,28 @@
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { useMemo } from 'react'
+import { useVirtualizer } from '@tanstack/react-virtual'
+import { useEffect, useMemo, useRef } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { SortableTaskCard } from '@/features/tasks/components/SortableTaskCard.tsx'
 import type { Task } from '@/features/tasks/model/types.ts'
 import type { TaskId } from '@/shared/types/branded.ts'
+import {
+  BOARD_CARD_ESTIMATE_PX,
+  BOARD_CARD_GAP_PX,
+  VIRTUAL_OVERSCAN,
+} from '@/shared/lib/virtual.ts'
 import { TASK_STATUS_LABELS, type TaskStatus } from '@/shared/types/task-ui.ts'
 import { cn } from '@/lib/utils'
 
 type BoardColumnProps = {
   status: TaskStatus
   tasks: Task[]
+  totalCount?: number
+  hasNextPage?: boolean
+  isFetchingNextPage?: boolean
   isDropTarget?: boolean
+  onLoadMore?: () => unknown
   onEdit: (taskId: TaskId) => void
   onDelete: (taskId: TaskId) => void
   onAdd: () => void
@@ -21,14 +31,50 @@ type BoardColumnProps = {
 export function BoardColumn({
   status,
   tasks,
+  totalCount,
+  hasNextPage = false,
+  isFetchingNextPage = false,
   isDropTarget = false,
+  onLoadMore,
   onEdit,
   onDelete,
   onAdd,
 }: BoardColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: status })
+  const scrollRef = useRef<HTMLDivElement>(null)
   const itemIds = useMemo(() => tasks.map((task) => task.id), [tasks])
   const showDropHighlight = isDropTarget || isOver
+  const countLabel =
+    totalCount != null && totalCount !== tasks.length
+      ? `${tasks.length} / ${totalCount}`
+      : String(totalCount ?? tasks.length)
+
+  // TanStack Virtual's API is not compiler-memoizable; skip that lint for this hook.
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const virtualizer = useVirtualizer({
+    count: tasks.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => BOARD_CARD_ESTIMATE_PX,
+    overscan: VIRTUAL_OVERSCAN,
+    gap: BOARD_CARD_GAP_PX,
+    getItemKey: (index) => tasks[index]?.id ?? index,
+  })
+
+  const lastVirtualIndex = virtualizer.getVirtualItems().at(-1)?.index
+
+  useEffect(() => {
+    if (
+      lastVirtualIndex == null ||
+      !hasNextPage ||
+      isFetchingNextPage ||
+      !onLoadMore ||
+      lastVirtualIndex < tasks.length - 5
+    ) {
+      return
+    }
+
+    onLoadMore()
+  }, [hasNextPage, isFetchingNextPage, lastVirtualIndex, onLoadMore, tasks.length])
 
   return (
     <section
@@ -50,25 +96,44 @@ export function BoardColumn({
         >
           {TASK_STATUS_LABELS[status]}
         </h2>
-        <span className="text-xs text-muted-foreground">{tasks.length}</span>
+        <span className="text-xs tabular-nums text-muted-foreground">{countLabel}</span>
       </div>
 
       <SortableContext id={status} items={itemIds} strategy={verticalListSortingStrategy}>
         <div
+          ref={scrollRef}
           role="list"
           aria-labelledby={`column-${status}`}
+          data-virtualized-column={status}
           className={cn(
             'min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-md pr-1 transition-colors',
             showDropHighlight && 'bg-foreground/5',
           )}
         >
-          <div className="space-y-3">
-            {tasks.map((task) => (
-              <div key={task.id} role="listitem">
-                <SortableTaskCard task={task} onEdit={onEdit} onDelete={onDelete} />
-              </div>
-            ))}
+          <div className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>
+            {virtualizer.getVirtualItems().map((virtualItem) => {
+              const task = tasks[virtualItem.index]
+              if (!task) {
+                return null
+              }
+
+              return (
+                <div
+                  key={task.id}
+                  role="listitem"
+                  data-index={virtualItem.index}
+                  ref={virtualizer.measureElement}
+                  className="absolute top-0 left-0 w-full"
+                  style={{ transform: `translateY(${virtualItem.start}px)` }}
+                >
+                  <SortableTaskCard task={task} onEdit={onEdit} onDelete={onDelete} />
+                </div>
+              )
+            })}
           </div>
+          {isFetchingNextPage ? (
+            <p className="py-2 text-center text-xs text-muted-foreground">Loading more…</p>
+          ) : null}
         </div>
       </SortableContext>
 
