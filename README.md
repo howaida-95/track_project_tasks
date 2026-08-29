@@ -78,9 +78,6 @@ Copy from `.env.example`. Set `VITE_ENABLE_MOCKS=false` only when pointing at a 
 | Virtualization  | `@tanstack/react-virtual`                                                                         | 1,000+ rows/cards without mounting everything                       |
 | Mock API        | MSW v2 + `localStorage` store                                                                     | Same handlers for browser, tests, and the deployed demo             |
 
-### Why Redux Toolkit _and_ TanStack Query (not RTK Query)
-
-The brief allows either. Splitting them keeps the **server-vs-client** boundary visible: task data never lands in a Redux slice, and axios stays the only HTTP entry point (RTK Query would need a custom `axiosBaseQuery`). Collapsing onto RTK Query later is a viable team preference — listed under roadmap.
 
 ### Feature-sliced layout
 
