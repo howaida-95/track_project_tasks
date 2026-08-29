@@ -42,14 +42,4 @@ describe('task handlers', () => {
     expect(getResponse.status).toBe(200)
     expect(TaskSchema.parse(await getResponse.json()).title).toBe('Created via MSW')
   })
-
-  it('supports forced error query param', async () => {
-    const response = await fetch(`${API_BASE}/tasks?forceError=500`)
-    expect(response.status).toBe(500)
-  })
-
-  it('exposes dedicated forced error route', async () => {
-    const response = await fetch(`${API_BASE}/tasks/__error/503`)
-    expect(response.status).toBe(503)
-  })
 })

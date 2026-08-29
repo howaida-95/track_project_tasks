@@ -82,13 +82,23 @@ export const TaskFormSchema = z.object({
 
 export type TaskFormValues = z.infer<typeof TaskFormSchema>
 
+/** Empty / missing form dates become null for the API. */
+function toNullableDueDate(value: string | null | undefined): string | null {
+  if (value == null) {
+    return null
+  }
+
+  const trimmed = value.trim()
+  return trimmed === '' ? null : trimmed
+}
+
 export function toCreateTaskInput(values: TaskFormValues): CreateTaskInput {
   return {
     title: values.title,
     description: values.description,
     status: values.status,
     priority: values.priority,
-    dueDate: values.dueDate === '' ? null : values.dueDate,
+    dueDate: toNullableDueDate(values.dueDate),
   }
 }
 
@@ -98,7 +108,7 @@ export function toTaskFormValues(overrides: Partial<TaskFormValues> = {}): TaskF
     description: overrides.description ?? '',
     status: overrides.status ?? 'todo',
     priority: overrides.priority ?? 'medium',
-    dueDate: overrides.dueDate ?? '',
+    dueDate: toNullableDueDate(overrides.dueDate) ?? '',
   }
 }
 
@@ -108,6 +118,6 @@ export function taskToFormValues(task: Task): TaskFormValues {
     description: task.description,
     status: task.status,
     priority: task.priority,
-    dueDate: task.dueDate ?? '',
+    dueDate: toNullableDueDate(task.dueDate) ?? '',
   })
 }

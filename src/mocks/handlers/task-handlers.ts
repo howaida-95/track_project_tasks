@@ -23,43 +23,6 @@ function problem(status: number, message: string, details?: Record<string, strin
   return details ? { status, message, details } : { status, message }
 }
 
-function getForceErrorStatus(request: Request): number | null {
-  const url = new URL(request.url)
-  const fromQuery = url.searchParams.get('forceError')
-
-  if (fromQuery) {
-    const parsed = Number(fromQuery)
-    return Number.isFinite(parsed) ? parsed : null
-  }
-
-  const fromHeader = request.headers.get('X-Force-Error')
-
-  if (fromHeader) {
-    const parsed = Number(fromHeader)
-    return Number.isFinite(parsed) ? parsed : null
-  }
-
-  return null
-}
-
-function forcedResponse(request: Request): Response | null {
-  const status = getForceErrorStatus(request)
-
-  if (status === 500) {
-    return HttpResponse.json(problem(500, 'Forced server error for testing'), { status: 500 })
-  }
-
-  if (status === 404) {
-    return HttpResponse.json(problem(404, 'Forced not found for testing'), { status: 404 })
-  }
-
-  if (status === 400) {
-    return HttpResponse.json(problem(400, 'Forced bad request for testing'), { status: 400 })
-  }
-
-  return null
-}
-
 function validationProblem(error: ZodError): ApiProblem {
   const details = error.flatten().fieldErrors as Record<string, string[]>
 
@@ -130,21 +93,11 @@ function parseListParams(request: Request): TaskListParams {
 
 export const taskHandlers = [
   http.get(`${API_BASE}/tasks`, ({ request }) => {
-    const forced = forcedResponse(request)
-    if (forced) {
-      return forced
-    }
-
     const params = parseListParams(request)
     return HttpResponse.json(listStoredTasks(params))
   }),
 
-  http.get(`${API_BASE}/tasks/:taskId`, ({ request, params }) => {
-    const forced = forcedResponse(request)
-    if (forced) {
-      return forced
-    }
-
+  http.get(`${API_BASE}/tasks/:taskId`, ({ params }) => {
     const taskId = readPathParam(params.taskId)
 
     if (!taskId) {
@@ -161,11 +114,6 @@ export const taskHandlers = [
   }),
 
   http.post(`${API_BASE}/tasks`, async ({ request }) => {
-    const forced = forcedResponse(request)
-    if (forced) {
-      return forced
-    }
-
     try {
       const body = (await request.json()) as CreateTaskInput
       const created = createStoredTask(body)
@@ -180,11 +128,6 @@ export const taskHandlers = [
   }),
 
   http.patch(`${API_BASE}/tasks/:taskId`, async ({ request, params }) => {
-    const forced = forcedResponse(request)
-    if (forced) {
-      return forced
-    }
-
     const taskId = readPathParam(params.taskId)
 
     if (!taskId) {
@@ -209,12 +152,7 @@ export const taskHandlers = [
     }
   }),
 
-  http.delete(`${API_BASE}/tasks/:taskId`, ({ request, params }) => {
-    const forced = forcedResponse(request)
-    if (forced) {
-      return forced
-    }
-
+  http.delete(`${API_BASE}/tasks/:taskId`, ({ params }) => {
     const taskId = readPathParam(params.taskId)
 
     if (!taskId) {
@@ -228,13 +166,5 @@ export const taskHandlers = [
     }
 
     return new HttpResponse(null, { status: 204 })
-  }),
-
-  http.get(`${API_BASE}/tasks/__error/:statusCode`, ({ params }) => {
-    const statusCode = Number(params.statusCode ?? '500')
-
-    return HttpResponse.json(problem(statusCode, `Forced ${statusCode} error route`), {
-      status: Number.isFinite(statusCode) ? statusCode : 500,
-    })
   }),
 ]

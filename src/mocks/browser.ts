@@ -10,6 +10,7 @@ export async function startMockWorker(): Promise<void> {
   }
 
   await worker.start({
+    quiet: true,
     onUnhandledRequest: 'bypass',
     serviceWorker: {
       url: '/mockServiceWorker.js',
