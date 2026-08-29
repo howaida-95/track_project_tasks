@@ -6,9 +6,15 @@ import type {
   TaskFilters,
   TaskListParams,
   TaskSortField,
+  TaskStats,
 } from '@/features/tasks/model/types.ts'
 import type { TaskId } from '@/shared/types/branded.ts'
-import { TASK_STATUSES, type TaskPriority, type TaskStatus } from '@/shared/types/task-ui.ts'
+import {
+  TASK_PRIORITIES,
+  TASK_STATUSES,
+  type TaskPriority,
+  type TaskStatus,
+} from '@/shared/types/task-ui.ts'
 
 export type TasksByStatus = Record<TaskStatus, Task[]>
 
@@ -146,6 +152,26 @@ export function emptyTasksByStatus(): TasksByStatus {
     in_progress: [],
     in_review: [],
     done: [],
+  }
+}
+
+function emptyCountRecord<T extends string>(keys: readonly T[]): Record<T, number> {
+  return Object.fromEntries(keys.map((key) => [key, 0])) as Record<T, number>
+}
+
+export function summarizeTasks(tasks: Task[]): TaskStats {
+  const byStatus = emptyCountRecord(TASK_STATUSES)
+  const byPriority = emptyCountRecord(TASK_PRIORITIES)
+
+  for (const task of tasks) {
+    byStatus[task.status] += 1
+    byPriority[task.priority] += 1
+  }
+
+  return {
+    total: tasks.length,
+    byStatus,
+    byPriority,
   }
 }
 

@@ -5,6 +5,7 @@ import {
   deleteStoredTask,
   getStoredTask,
   getStoredTaskCount,
+  getStoredTaskStats,
   listStoredTasks,
   resetTaskStore,
   updateStoredTask,
@@ -76,5 +77,18 @@ describe('task repository', () => {
 
     expect(result.meta.total).toBe(1)
     expect(result.data[0]?.title).toBe('Auth flow')
+  })
+
+  it('aggregates catalog statistics', () => {
+    replaceTaskStore([
+      makeTask({ title: 'Auth flow', status: 'todo', priority: 'high' }),
+      makeTask({ title: 'Board polish', status: 'done', priority: 'low' }),
+    ])
+
+    expect(getStoredTaskStats()).toEqual({
+      total: 2,
+      byStatus: { todo: 1, in_progress: 0, in_review: 0, done: 1 },
+      byPriority: { low: 1, medium: 0, high: 1, urgent: 0 },
+    })
   })
 })

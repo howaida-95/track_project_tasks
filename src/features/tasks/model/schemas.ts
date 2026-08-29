@@ -66,6 +66,22 @@ export const PaginatedTasksSchema = z.object({
   }),
 })
 
+export const TaskStatsSchema = z.object({
+  total: z.number().int().nonnegative(),
+  byStatus: z.object({
+    todo: z.number().int().nonnegative(),
+    in_progress: z.number().int().nonnegative(),
+    in_review: z.number().int().nonnegative(),
+    done: z.number().int().nonnegative(),
+  }),
+  byPriority: z.object({
+    low: z.number().int().nonnegative(),
+    medium: z.number().int().nonnegative(),
+    high: z.number().int().nonnegative(),
+    urgent: z.number().int().nonnegative(),
+  }),
+})
+
 export const ApiProblemSchema = z.object({
   message: z.string(),
   status: z.number().int(),

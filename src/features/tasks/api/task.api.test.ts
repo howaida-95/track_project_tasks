@@ -5,6 +5,7 @@ import {
   createTask,
   deleteTask,
   getTask,
+  getTaskStats,
   listTasks,
   moveTask,
   updateTask,
@@ -35,6 +36,15 @@ describe('task.api', () => {
 
     expect(result.meta.total).toBe(1)
     expect(result.data[0]?.title).toBe('API alpha')
+  })
+
+  it('returns catalog statistics without listing task rows', async () => {
+    const stats = await getTaskStats()
+
+    expect(stats.total).toBe(2)
+    expect(stats.byStatus.todo).toBe(1)
+    expect(stats.byStatus.in_progress).toBe(1)
+    expect(stats.byPriority.medium).toBe(2)
   })
 
   it('gets, creates, updates, and deletes a task', async () => {
@@ -111,5 +121,6 @@ describe('task.api', () => {
     controller.abort()
 
     await expect(listTasks({}, { signal: controller.signal })).rejects.toThrow()
+    await expect(getTaskStats({ signal: controller.signal })).rejects.toThrow()
   })
 })

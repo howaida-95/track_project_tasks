@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { PaginatedTasksSchema, TaskSchema } from '@/features/tasks/model/schemas.ts'
+import {
+  PaginatedTasksSchema,
+  TaskSchema,
+  TaskStatsSchema,
+} from '@/features/tasks/model/schemas.ts'
 import { replaceTaskStore } from '@/mocks/db/task-store.ts'
 import { makeTask } from '@/test/factories/make-task.ts'
 
@@ -22,6 +26,17 @@ describe('task handlers', () => {
     const body = PaginatedTasksSchema.parse(await response.json())
     expect(body.meta.total).toBe(1)
     expect(body.data[0]?.title).toBe('Handler alpha')
+  })
+
+  it('returns task statistics without a task list payload', async () => {
+    const response = await fetch(`${API_BASE}/tasks/stats`)
+    expect(response.status).toBe(200)
+
+    const body = TaskStatsSchema.parse(await response.json())
+    expect(body.total).toBe(2)
+    expect(body.byStatus.todo).toBe(1)
+    expect(body.byStatus.in_progress).toBe(1)
+    expect(body).not.toHaveProperty('data')
   })
 
   it('creates and fetches a task', async () => {

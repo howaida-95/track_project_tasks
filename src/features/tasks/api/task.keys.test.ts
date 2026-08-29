@@ -11,6 +11,7 @@ describe('taskKeys', () => {
 
     expect(taskKeys.all).toEqual(['tasks'])
     expect(taskKeys.list(filters)).toEqual(['tasks', 'list', filters])
+    expect(taskKeys.stats()).toEqual(['tasks', 'stats'])
     expect(taskKeys.detail(taskId)).toEqual(['tasks', 'detail', taskId])
   })
 })

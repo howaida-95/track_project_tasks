@@ -3,12 +3,14 @@ import {
   moveTaskInList,
   nextPositionForStatus,
   queryTasks,
+  summarizeTasks,
 } from '@/features/tasks/model/task.rules.ts'
 import type {
   CreateTaskInput,
   PaginatedTasks,
   Task,
   TaskListParams,
+  TaskStats,
   UpdateTaskInput,
 } from '@/features/tasks/model/types.ts'
 import {
@@ -149,6 +151,10 @@ export function deleteStoredTask(id: TaskId, storage: StorageLike = localStorage
 
 export function getStoredTaskCount(storage: StorageLike = localStorage): number {
   return readTaskStore(storage as Storage).tasks.length
+}
+
+export function getStoredTaskStats(storage: StorageLike = localStorage): TaskStats {
+  return summarizeTasks(readTaskStore(storage as Storage).tasks)
 }
 
 export { resetTaskStore, replaceTaskStore, readTaskStore }
