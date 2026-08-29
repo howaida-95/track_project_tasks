@@ -105,7 +105,7 @@ describe('mergeTaskListParams', () => {
     const search = buildTaskSearchParams(
       {
         page: 1,
-        limit: 50,
+        limit: 25,
         sort: 'createdAt',
         order: 'desc',
       },

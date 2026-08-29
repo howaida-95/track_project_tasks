@@ -1,3 +1,4 @@
+import { DEFAULT_PAGE_SIZE } from '@/features/tasks/model/pagination.ts'
 import type {
   PaginatedTasks,
   PaginationParams,
@@ -115,7 +116,7 @@ export function sortTasks(
 
 export function paginateTasks(
   tasks: Task[],
-  { page = 1, limit = 50 }: PaginationParams,
+  { page = 1, limit = DEFAULT_PAGE_SIZE }: PaginationParams,
 ): PaginatedTasks {
   const total = tasks.length
   const totalPages = total === 0 ? 0 : Math.ceil(total / limit)

@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '@/features/tasks/model/pagination.ts'
 import type { CreateTaskInput, Task } from '@/features/tasks/model/types.ts'
 import { toTaskId } from '@/shared/types/branded.ts'
 import { TASK_PRIORITIES, TASK_STATUSES } from '@/shared/types/task-ui.ts'
@@ -46,7 +47,7 @@ export const TaskFiltersSchema = z.object({
 
 export const PaginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(50),
+  limit: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
   sort: z
     .enum(['createdAt', 'dueDate', 'position', 'priority', 'title', 'updatedAt'])
     .default('createdAt'),
