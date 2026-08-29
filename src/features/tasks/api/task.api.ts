@@ -1,12 +1,18 @@
 import type { AxiosRequestConfig } from 'axios'
 
-import { MoveTaskSchema, PaginatedTasksSchema, TaskSchema } from '@/features/tasks/model/schemas.ts'
+import {
+  MoveTaskSchema,
+  PaginatedTasksSchema,
+  TaskSchema,
+  TaskStatsSchema,
+} from '@/features/tasks/model/schemas.ts'
 import type {
   CreateTaskInput,
   MoveTaskInput,
   PaginatedTasks,
   Task,
   TaskListParams,
+  TaskStats,
   UpdateTaskInput,
 } from '@/features/tasks/model/types.ts'
 import { buildListParams, serializeTaskListParams } from '@/features/tasks/api/task-params.ts'
@@ -39,6 +45,14 @@ export async function listTasks(
   })
 
   return parseResponse(PaginatedTasksSchema, response.data, 'listTasks') as PaginatedTasks
+}
+
+export async function getTaskStats(options: RequestOptions = {}): Promise<TaskStats> {
+  const response = await axiosClient.get<unknown>(`${TASKS_PATH}/stats`, {
+    ...withRequestOptions(options),
+  })
+
+  return parseResponse(TaskStatsSchema, response.data, 'getTaskStats') as TaskStats
 }
 
 export async function getTask(taskId: TaskId, options: RequestOptions = {}): Promise<Task> {

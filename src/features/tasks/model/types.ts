@@ -68,3 +68,9 @@ export type ApiProblem = {
   status: number
   details?: Record<string, string[]>
 }
+
+export type TaskStats = {
+  total: number
+  byStatus: Record<TaskStatus, number>
+  byPriority: Record<TaskPriority, number>
+}

@@ -1,4 +1,9 @@
-import { LayoutGridIcon, PanelLeftCloseIcon, PanelLeftOpenIcon } from 'lucide-react'
+import {
+  ChartColumnIcon,
+  LayoutGridIcon,
+  PanelLeftCloseIcon,
+  PanelLeftOpenIcon,
+} from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
 import { useAppDispatch, useAppSelector } from '@/app/store/hooks.ts'
@@ -20,6 +25,12 @@ const NAV_ITEMS = [
     to: paths.tasks,
     label: 'Tasks',
     icon: LayoutGridIcon,
+    end: true,
+  },
+  {
+    to: paths.analytics,
+    label: 'Analytics',
+    icon: ChartColumnIcon,
     end: true,
   },
 ] as const

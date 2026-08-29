@@ -12,6 +12,7 @@ import {
   createStoredTask,
   deleteStoredTask,
   getStoredTask,
+  getStoredTaskStats,
   listStoredTasks,
   updateStoredTask,
 } from '@/mocks/db/task-repository.ts'
@@ -92,6 +93,10 @@ function parseListParams(request: Request): TaskListParams {
 }
 
 export const taskHandlers = [
+  http.get(`${API_BASE}/tasks/stats`, () => {
+    return HttpResponse.json(getStoredTaskStats())
+  }),
+
   http.get(`${API_BASE}/tasks`, ({ request }) => {
     const params = parseListParams(request)
     return HttpResponse.json(listStoredTasks(params))

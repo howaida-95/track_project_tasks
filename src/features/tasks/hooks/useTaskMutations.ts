@@ -62,6 +62,7 @@ export function useTaskMutations() {
       toast.success('Task updated')
       queryClient.setQueryData(taskKeys.detail(taskId), updatedTask)
       replaceTaskInLists(queryClient, taskId, updatedTask)
+      void queryClient.invalidateQueries({ queryKey: taskKeys.stats() })
     },
   })
 
@@ -96,6 +97,7 @@ export function useTaskMutations() {
     onSuccess: (updatedTask, { taskId }) => {
       queryClient.setQueryData(taskKeys.detail(taskId), updatedTask)
       replaceTaskInLists(queryClient, taskId, updatedTask)
+      void queryClient.invalidateQueries({ queryKey: taskKeys.stats() })
     },
   })
 
