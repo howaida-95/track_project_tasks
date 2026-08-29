@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 
 import BoardLayout from '@/app/layouts/BoardLayout.tsx'
+import ErrorLayout from '@/app/layouts/ErrorLayout.tsx'
 import RootLayout from '@/app/layouts/RootLayout.tsx'
 import NotFound from '@/app/layouts/NotFound.tsx'
 import { LegacyTasksRedirect } from '@/app/routes/LegacyTasksRedirect.tsx'
@@ -11,6 +12,7 @@ import { paths } from '@/app/routes/paths.ts'
 export const router = createBrowserRouter([
   {
     element: <RootLayout />,
+    errorElement: <ErrorLayout />,
     children: [
       {
         index: true,
@@ -18,6 +20,7 @@ export const router = createBrowserRouter([
       },
       {
         path: paths.tasks,
+        errorElement: <ErrorLayout />,
         element: (
           <Suspense fallback={<RouteFallback />}>
             <BoardLayout />
