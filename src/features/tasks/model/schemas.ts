@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '@/features/tasks/model/pagination.ts'
 import type { CreateTaskInput, Task } from '@/features/tasks/model/types.ts'
+import { toLocalDateString } from '@/shared/lib/local-date.ts'
 import { toTaskId } from '@/shared/types/branded.ts'
 import { TASK_PRIORITIES, TASK_STATUSES } from '@/shared/types/task-ui.ts'
 
@@ -88,7 +89,7 @@ export const ApiProblemSchema = z.object({
   details: z.record(z.array(z.string())).optional(),
 })
 
-export const TaskFormSchema = z.object({
+const taskFormFieldsSchema = z.object({
   title: z.string().trim().min(1, 'Title is required').max(200),
   description: z.string().max(5000),
   status: z.enum(TASK_STATUSES),
@@ -96,7 +97,37 @@ export const TaskFormSchema = z.object({
   dueDate: z.union([z.string().date(), z.literal('')]),
 })
 
-export type TaskFormValues = z.infer<typeof TaskFormSchema>
+export type TaskFormValues = z.infer<typeof taskFormFieldsSchema>
+
+/**
+ * Empty due date is optional. New dates must be today or later.
+ * Editing may keep an existing overdue value so save is not blocked.
+ */
+export function createTaskFormSchema(existingDueDate?: string | null) {
+  return taskFormFieldsSchema.superRefine((values, ctx) => {
+    if (values.dueDate === '') {
+      return
+    }
+
+    const today = toLocalDateString()
+
+    if (values.dueDate >= today) {
+      return
+    }
+
+    if (existingDueDate && values.dueDate === existingDueDate) {
+      return
+    }
+
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['dueDate'],
+      message: 'Due date must be today or later',
+    })
+  })
+}
+
+export const TaskFormSchema = createTaskFormSchema()
 
 /** Empty / missing form dates become null for the API. */
 function toNullableDueDate(value: string | null | undefined): string | null {

@@ -14,12 +14,13 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import {
-  TaskFormSchema,
+  createTaskFormSchema,
   taskToFormValues,
   toTaskFormValues,
   type TaskFormValues,
 } from '@/features/tasks/model/schemas.ts'
 import type { Task } from '@/features/tasks/model/types.ts'
+import { toLocalDateString } from '@/shared/lib/local-date.ts'
 import {
   TASK_PRIORITIES,
   TASK_PRIORITY_LABELS,
@@ -45,6 +46,9 @@ export function TaskForm({
   isSubmitting = false,
   onSubmit,
 }: TaskFormProps) {
+  const formSchema = createTaskFormSchema(task?.dueDate)
+  const earliestDueDate = toLocalDateString()
+
   const {
     register,
     handleSubmit,
@@ -52,7 +56,7 @@ export function TaskForm({
     control,
     formState: { errors },
   } = useForm<TaskFormValues>({
-    resolver: zodResolver(TaskFormSchema),
+    resolver: zodResolver(formSchema),
     defaultValues: task ? taskToFormValues(task) : toTaskFormValues(formDefaults),
   })
 
@@ -162,10 +166,18 @@ export function TaskForm({
             <Input
               id="task-due-date"
               type="date"
+              min={earliestDueDate}
               className={cn(fieldClassName, 'pl-8')}
+              aria-invalid={errors.dueDate ? true : undefined}
+              aria-describedby={errors.dueDate ? 'task-due-date-error' : undefined}
               {...register('dueDate')}
             />
           </div>
+          {errors.dueDate ? (
+            <p id="task-due-date-error" className="text-xs text-destructive">
+              {errors.dueDate.message}
+            </p>
+          ) : null}
         </div>
       </div>
 
