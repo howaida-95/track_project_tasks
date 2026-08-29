@@ -6,6 +6,7 @@ import {
   flattenTaskListData,
   removeTaskFromLists,
   replaceTaskInLists,
+  type CachedTaskList,
 } from '@/features/tasks/api/task-list-cache.ts'
 import { taskKeys } from '@/features/tasks/api/task.keys.ts'
 import { toBoardColumnParams } from '@/features/tasks/model/pagination.ts'
@@ -49,10 +50,12 @@ describe('task list cache', () => {
     applyTaskPatchInLists(queryClient, moving.id, { status: 'in_progress', position: 0 })
 
     const todo = flattenTaskListData(
-      queryClient.getQueryData(taskKeys.list(toBoardColumnParams({}, 'todo')))!,
+      queryClient.getQueryData<CachedTaskList>(taskKeys.list(toBoardColumnParams({}, 'todo')))!,
     )
     const inProgress = flattenTaskListData(
-      queryClient.getQueryData(taskKeys.list(toBoardColumnParams({}, 'in_progress')))!,
+      queryClient.getQueryData<CachedTaskList>(
+        taskKeys.list(toBoardColumnParams({}, 'in_progress')),
+      )!,
     )
 
     expect(todo.map((task) => task.title)).toEqual(['Stay'])
@@ -100,7 +103,11 @@ describe('task list cache', () => {
 
     removeTaskFromLists(queryClient, remove.id)
 
-    const cached = queryClient.getQueryData(taskKeys.list(toBoardColumnParams({}, 'todo')))
+    const cached = queryClient.getQueryData<CachedTaskList>(
+      taskKeys.list(toBoardColumnParams({}, 'todo')),
+    )
+
+    expect(cached).toBeDefined()
     const titles = flattenTaskListData(cached!).map((task) => task.title)
 
     expect(titles).toEqual(['Keep me'])
