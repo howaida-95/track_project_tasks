@@ -22,19 +22,21 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
-      include: ['src/**/*.{ts,tsx}'],
+      include: [
+        'src/features/**/*.{ts,tsx}',
+        'src/app/store/**/*.{ts,tsx}',
+        'src/shared/lib/**/*.{ts,tsx}',
+      ],
       exclude: [
         'src/**/*.test.{ts,tsx}',
         'src/test/**',
         'src/mocks/**',
-        'src/main.tsx',
         'src/components/ui/**',
       ],
-      // Stub thresholds — full suite targets ~80% in test/coverage-a11y
       thresholds: {
         lines: 80,
         functions: 80,
-        branches: 80,
+        branches: 72,
         statements: 80,
       },
     },

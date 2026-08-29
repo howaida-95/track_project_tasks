@@ -1,9 +1,10 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider, QueryErrorResetBoundary } from '@tanstack/react-query'
 import { useState, type ReactNode } from 'react'
 import { Provider } from 'react-redux'
 import { RouterProvider } from 'react-router-dom'
 import { Toaster } from 'sonner'
 
+import { AppErrorBoundary } from '@/app/providers/AppErrorBoundary.tsx'
 import { router } from '@/app/routes/router.tsx'
 import { store } from '@/app/store/store.ts'
 import { getRetryDelay, shouldRetryQuery } from '@/shared/api/retry-policy.ts'
@@ -12,10 +13,6 @@ type AppProvidersProps = {
   children?: ReactNode
 }
 
-/**
- * Application provider shell.
- * Error boundaries and theme wiring land in feat/design-system.
- */
 export function AppProviders({ children }: AppProvidersProps) {
   const [queryClient] = useState(
     () =>
@@ -27,6 +24,9 @@ export function AppProviders({ children }: AppProvidersProps) {
             retry: shouldRetryQuery,
             retryDelay: getRetryDelay,
           },
+          mutations: {
+            networkMode: 'offlineFirst',
+          },
         },
       }),
   )
@@ -36,8 +36,12 @@ export function AppProviders({ children }: AppProvidersProps) {
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        {content}
-        <Toaster richColors closeButton />
+        <QueryErrorResetBoundary>
+          <AppErrorBoundary>
+            {content}
+            <Toaster richColors closeButton />
+          </AppErrorBoundary>
+        </QueryErrorResetBoundary>
       </QueryClientProvider>
     </Provider>
   )

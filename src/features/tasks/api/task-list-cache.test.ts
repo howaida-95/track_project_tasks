@@ -1,7 +1,13 @@
 import { QueryClient } from '@tanstack/react-query'
 import { describe, expect, it } from 'vitest'
 
-import { applyTaskPatchInLists, flattenTaskListData } from '@/features/tasks/api/task-list-cache.ts'
+import {
+  applyTaskPatchInLists,
+  flattenTaskListData,
+  removeTaskFromLists,
+  replaceTaskInLists,
+  type CachedTaskList,
+} from '@/features/tasks/api/task-list-cache.ts'
 import { taskKeys } from '@/features/tasks/api/task.keys.ts'
 import { toBoardColumnParams } from '@/features/tasks/model/pagination.ts'
 import type { PaginatedTasks, Task } from '@/features/tasks/model/types.ts'
@@ -44,10 +50,12 @@ describe('task list cache', () => {
     applyTaskPatchInLists(queryClient, moving.id, { status: 'in_progress', position: 0 })
 
     const todo = flattenTaskListData(
-      queryClient.getQueryData(taskKeys.list(toBoardColumnParams({}, 'todo')))!,
+      queryClient.getQueryData<CachedTaskList>(taskKeys.list(toBoardColumnParams({}, 'todo')))!,
     )
     const inProgress = flattenTaskListData(
-      queryClient.getQueryData(taskKeys.list(toBoardColumnParams({}, 'in_progress')))!,
+      queryClient.getQueryData<CachedTaskList>(
+        taskKeys.list(toBoardColumnParams({}, 'in_progress')),
+      )!,
     )
 
     expect(todo.map((task) => task.title)).toEqual(['Stay'])
@@ -55,5 +63,54 @@ describe('task list cache', () => {
     expect(todo[0]?.position).toBe(0)
     expect(inProgress[0]?.position).toBe(0)
     expect(inProgress[1]?.position).toBe(1)
+  })
+
+  it('flattens paginated list data', () => {
+    const tasks = [makeTask({ title: 'Paged task' })]
+    const paginated: PaginatedTasks = {
+      data: tasks,
+      meta: { total: 1, page: 1, limit: 25, totalPages: 1 },
+    }
+
+    expect(flattenTaskListData(paginated)).toEqual(tasks)
+  })
+
+  it('replaces a task in paginated list caches', () => {
+    const queryClient = new QueryClient()
+    const original = makeTask({ title: 'Before edit', status: 'todo', position: 0 })
+    const updated = { ...original, title: 'After edit' }
+    const paginated: PaginatedTasks = {
+      data: [original],
+      meta: { total: 1, page: 1, limit: 25, totalPages: 1 },
+    }
+
+    queryClient.setQueryData(taskKeys.list({}), paginated)
+    replaceTaskInLists(queryClient, original.id, updated)
+
+    const cached = queryClient.getQueryData<PaginatedTasks>(taskKeys.list({}))
+    expect(cached?.data[0]?.title).toBe('After edit')
+  })
+
+  it('removes a task from list caches and updates totals', () => {
+    const queryClient = new QueryClient()
+    const keep = makeTask({ title: 'Keep me', status: 'todo', position: 0 })
+    const remove = makeTask({ title: 'Remove me', status: 'todo', position: 1 })
+
+    queryClient.setQueryData(
+      taskKeys.list(toBoardColumnParams({}, 'todo')),
+      infiniteList([keep, remove], 2),
+    )
+
+    removeTaskFromLists(queryClient, remove.id)
+
+    const cached = queryClient.getQueryData<CachedTaskList>(
+      taskKeys.list(toBoardColumnParams({}, 'todo')),
+    )
+
+    expect(cached).toBeDefined()
+    const titles = flattenTaskListData(cached!).map((task) => task.title)
+
+    expect(titles).toEqual(['Keep me'])
+    expect(flattenTaskListData(cached!).length).toBe(1)
   })
 })

@@ -18,23 +18,17 @@ describe('TaskViewSwitcher', () => {
       router: { initialEntries: ['/tasks'] },
     })
 
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Task Board' })).toBeInTheDocument()
-      expect(screen.getByText('Switchable task')).toBeInTheDocument()
-    })
+    expect(await screen.findByRole('heading', { name: 'Task Board' })).toBeInTheDocument()
+    expect(await screen.findByText('Switchable task')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'List view' }))
 
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Task List' })).toBeInTheDocument()
-      expect(screen.getByText('Switchable task')).toBeInTheDocument()
-    })
+    expect(await screen.findByRole('heading', { name: 'Task List' })).toBeInTheDocument()
+    expect(await screen.findByText('Switchable task')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Board view' }))
 
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Task Board' })).toBeInTheDocument()
-    })
+    expect(await screen.findByRole('heading', { name: 'Task Board' })).toBeInTheDocument()
   })
 
   it('keeps the create action available in both views', async () => {
