@@ -1,7 +1,7 @@
 import { memo, useRef } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 
-import { Button } from '@/components/ui/button'
+import { TaskActionButtons } from '@/shared/components/TaskActionButtons.tsx'
 import type { Task } from '@/features/tasks/model/types.ts'
 import type { TaskId } from '@/shared/types/branded.ts'
 import { LIST_ROW_ESTIMATE_PX, VIRTUAL_OVERSCAN } from '@/shared/lib/virtual.ts'
@@ -33,14 +33,7 @@ const TaskListRow = memo(function TaskListRow({
       <td className="px-4 py-3 capitalize">{task.priority}</td>
       <td className="px-4 py-3 text-muted-foreground">{task.dueDate ?? '—'}</td>
       <td className="px-4 py-3">
-        <div className="flex gap-2">
-          <Button type="button" size="sm" variant="outline" onClick={() => onEdit(task.id)}>
-            Edit
-          </Button>
-          <Button type="button" size="sm" variant="destructive" onClick={() => onDelete(task.id)}>
-            Delete
-          </Button>
-        </div>
+        <TaskActionButtons taskId={task.id} onEdit={onEdit} onDelete={onDelete} />
       </td>
     </>
   )
@@ -67,7 +60,7 @@ export function TaskListTable({ tasks, onEdit, onDelete }: TaskListTableProps) {
     <div
       ref={scrollRef}
       data-virtualized-list
-      className="min-h-0 flex-1 overflow-auto rounded-card border border-border"
+      className="min-h-0 flex-1 overflow-auto rounded-card border border-border [-webkit-overflow-scrolling:touch]"
     >
       <table className="w-full min-w-[640px] border-collapse text-sm">
         <caption className="sr-only">Tasks matching the current filters</caption>
