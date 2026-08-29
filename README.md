@@ -68,16 +68,15 @@ Copy from `.env.example`. Set `VITE_ENABLE_MOCKS=false` only when pointing at a 
 | Concern         | Choice                                                                                            | Why                                                                 |
 | --------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
 | Build           | Vite + React 19 + TypeScript (`strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`) | Client-only dashboard; fast iteration; no SSR/SEO need              |
-| Styling         | Tailwind v4 + shadcn/ui (Radix) + design tokens                                                   | Token-first theme; accessible primitives without owning focus traps |
+| Styling         | Tailwind v4 + copied shadcn/ui (Radix) + design tokens                                            | Token-first theme; accessible primitives without owning focus traps |
 | Server state    | TanStack Query v5                                                                                 | Cache, retries, cancellation, offline awareness at the right layer  |
-| Client UI state | Redux Toolkit                                                                                     | Dialogs, sidebar; never holds task entities                         |
+| Client UI state | Redux Toolkit                                                                                     | Dialogs + sidebar open; never holds task entities                   |
 | HTTP            | axios (single client)                                                                             | Interceptors, timeout, one typed error boundary                     |
 | Forms           | React Hook Form + Zod                                                                             | Shared create/edit form; schema = contract                          |
 | Routing         | React Router v7                                                                                   | Layout routes, lazy chunks, URL as filter source of truth           |
 | DnD             | `@dnd-kit`                                                                                        | Keyboard sensor + live-region announcements; RTL-friendly           |
 | Virtualization  | `@tanstack/react-virtual`                                                                         | 1,000+ rows/cards without mounting everything                       |
 | Mock API        | MSW v2 + `localStorage` store                                                                     | Same handlers for browser, tests, and the deployed demo             |
-
 
 ### Feature-sliced layout
 
@@ -101,7 +100,7 @@ flowchart TD
   Router["app/routes + layouts"] --> Views["Board / List / Analytics"]
   Views --> Hooks["feature hooks"]
   Hooks --> RQ["TanStack Query"]
-  Hooks --> Redux["RTK: dialogs, sidebar"]
+  Hooks --> Redux["RTK: dialogs + sidebar"]
   Hooks --> URL["URL search params: filters + view"]
   RQ --> Api["task.api.ts"]
   Api --> Axios["axiosClient + interceptors"]
@@ -141,19 +140,18 @@ Boundaries handle **render** failures; Query + toasts handle **async** failures.
 
 ## 3. Engineering Trade-Offs (48h)
 
-| Simplification                         | Decision                               | Cost                                                               |
-| -------------------------------------- | -------------------------------------- | ------------------------------------------------------------------ |
-| No real backend                        | MSW + localStorage for demo + tests    | Not multi-user; data is per-browser                                |
-| RTK + Query instead of RTK Query       | Clearer state boundaries with axios    | Two libraries to learn                                             |
-| Retry in Query, not `axios-retry`      | One retry policy that can drive UI     | Must keep mutation retry separate                                  |
-| Listener middleware vs `redux-persist` | ~20 lines for whitelisted UI prefs     | No nested persist config                                           |
-| Single `/tasks` route                  | Board/list via `?view=`                | Deep-link task modal not implemented (`paths.taskDetail` reserved) |
-| Dialogs in Redux                       | Stable toolbar while editing           | Edit is not a shareable URL yet                                    |
-| Virtualized board + dnd-kit            | Measured items + keyboard DnD          | More complex than “show more” fallback                             |
-| Theme / density in store only          | Persistence ready; no toggle UI yet    | Dark mode not user-switchable in the chrome                        |
-| Coverage branches ~72%                 | Lines/functions/statements ≥80%        | Branch threshold slightly relaxed                                  |
-| No auth / i18n / assignees             | Out of scope for the brief             | Multi-tenant and localization deferred                             |
-| AI-assisted implementation             | Faster delivery of boilerplate + tests | Human review for architecture and trade-offs (see below)           |
+| Simplification                          | Decision                               | Cost                                                     |
+| --------------------------------------- | -------------------------------------- | -------------------------------------------------------- |
+| No real backend                         | MSW + localStorage for demo + tests    | Not multi-user; data is per-browser                      |
+| RTK + Query instead of RTK Query        | Clearer state boundaries with axios    | Two libraries to learn                                   |
+| Retry in Query, not `axios-retry`       | One retry policy that can drive UI     | Must keep mutation retry separate                        |
+| Single `/tasks` route                   | Board/list via `?view=`                | Deep-link task modal (`/tasks/:id`) not shipped          |
+| Dialogs in Redux                        | Stable toolbar while editing           | Edit is not a shareable URL yet                          |
+| Virtualized board + dnd-kit             | Measured items + keyboard DnD          | More complex than “show more” fallback                   |
+| No theme / density / column-collapse UI | Kept chrome lean in the timebox        | Dark mode and density remain future work                 |
+| Coverage branches ~72%                  | Lines/functions/statements ≥80%        | Branch threshold slightly relaxed                        |
+| No auth / i18n / assignees              | Out of scope for the brief             | Multi-tenant and localization deferred                   |
+| AI-assisted implementation              | Faster delivery of boilerplate + tests | Human review for architecture and trade-offs (see below) |
 
 ### Performance trade-offs
 
@@ -188,7 +186,7 @@ What we **did not** ship in the timebox: Profiler before/after render counts in 
 
 - Assignees, tags UI, comments, attachments
 - Shareable deep links for a single task (`/tasks/:taskId` modal route)
-- Theme + density toggles wired to existing `uiSlice`
+- Theme, density, and collapsible board columns
 - Richer analytics (date range, burn-down, charts)
 - Stress-mode toggle and saved filter presets
 
@@ -217,7 +215,7 @@ What we **did not** ship in the timebox: Profiler before/after render counts in 
          │                              │
          ▼                              ▼
    TanStack Query                  Redux Toolkit
-   (tasks, stats)               (dialogs, sidebar)
+   (tasks, stats)            (dialogs, sidebar open)
          │
          ▼
    axiosClient → MSW → localStorage store (1,200 seed)

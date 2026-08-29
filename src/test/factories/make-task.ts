@@ -21,11 +21,4 @@ export function makeTask(overrides: MakeTaskOverrides = {}): Task {
   }
 }
 
-export function makeTasks(
-  count: number,
-  factory: (index: number) => MakeTaskOverrides = () => ({}),
-): Task[] {
-  return Array.from({ length: count }, (_, index) => makeTask(factory(index)))
-}
-
 export type { TaskStatus, TaskPriority }
