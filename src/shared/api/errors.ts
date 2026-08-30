@@ -61,10 +61,6 @@ export class ApiContractError extends Error {
   }
 }
 
-export function isApiError(error: unknown): error is ApiError {
-  return error instanceof ApiError
-}
-
 export function isRetryableApiError(error: unknown): boolean {
   if (error instanceof NetworkError || error instanceof TimeoutError) {
     return true

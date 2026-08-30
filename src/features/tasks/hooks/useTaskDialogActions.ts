@@ -1,5 +1,4 @@
-import { useAppDispatch, useAppSelector } from '@/app/store/hooks.ts'
-import { selectCreateDialogStatus } from '@/app/store/slices/dialogSlice.selectors.ts'
+import { useAppDispatch } from '@/app/store/hooks.ts'
 import {
   openCreateDialog,
   openDeleteDialog,
@@ -16,8 +15,4 @@ export function useTaskDialogActions() {
     openEdit: (taskId: TaskId) => dispatch(openEditDialog({ taskId })),
     openDelete: (taskId: TaskId) => dispatch(openDeleteDialog({ taskId })),
   }
-}
-
-export function useCreateDialogStatus(): TaskStatus {
-  return useAppSelector(selectCreateDialogStatus) ?? 'todo'
 }
