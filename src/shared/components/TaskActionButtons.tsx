@@ -19,7 +19,8 @@ export function TaskActionButtons({ taskId, onEdit, onDelete, className }: TaskA
         size="icon-sm"
         variant="ghost"
         aria-label="Edit"
-        className="text-muted-foreground hover:bg-primary/10 hover:text-primary"
+        className="cursor-pointer text-muted-foreground hover:bg-primary/10 hover:text-primary"
+        onPointerDown={(event) => event.stopPropagation()}
         onClick={() => onEdit(taskId)}
       >
         <PencilIcon className="size-3.5" />
@@ -29,7 +30,8 @@ export function TaskActionButtons({ taskId, onEdit, onDelete, className }: TaskA
         size="icon-sm"
         variant="ghost"
         aria-label="Delete"
-        className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+        className="cursor-pointer text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+        onPointerDown={(event) => event.stopPropagation()}
         onClick={() => onDelete(taskId)}
       >
         <Trash2Icon className="size-3.5" />

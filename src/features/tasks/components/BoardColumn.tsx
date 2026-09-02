@@ -123,8 +123,8 @@ export function BoardColumn({
                   role="listitem"
                   data-index={virtualItem.index}
                   ref={virtualizer.measureElement}
-                  className="absolute top-0 left-0 w-full"
-                  style={{ transform: `translateY(${virtualItem.start}px)` }}
+                  className="absolute left-0 w-full"
+                  style={{ top: virtualItem.start }}
                 >
                   <SortableTaskCard task={task} onEdit={onEdit} onDelete={onDelete} />
                 </div>

@@ -1,9 +1,8 @@
-import { Suspense, useState } from 'react'
+import { useState } from 'react'
 
-import { LazyTaskDialogsHost } from '@/app/routes/lazy-routes.ts'
-import { RouteFallback } from '@/app/routes/RouteFallback.tsx'
 import { useAppSelector } from '@/app/store/hooks.ts'
 import { selectIsDialogOpen } from '@/app/store/slices/dialogSlice.selectors.ts'
+import { TaskDialogsHost } from '@/features/tasks/components/TaskDialogsHost.tsx'
 
 export function TaskDialogsGate() {
   const isDialogOpen = useAppSelector(selectIsDialogOpen)
@@ -17,9 +16,5 @@ export function TaskDialogsGate() {
     return null
   }
 
-  return (
-    <Suspense fallback={<RouteFallback />}>
-      <LazyTaskDialogsHost />
-    </Suspense>
-  )
+  return <TaskDialogsHost />
 }

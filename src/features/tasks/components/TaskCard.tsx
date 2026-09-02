@@ -27,7 +27,7 @@ export const TaskCard = memo(function TaskCard({
   return (
     <article
       className={cn(
-        'group rounded-card border border-border/80 bg-card p-3.5 shadow-card transition-shadow hover:border-border hover:shadow-md',
+        'group cursor-grab rounded-card border border-border/80 bg-card p-3.5 shadow-card transition-shadow hover:border-border hover:shadow-md active:cursor-grabbing',
         isDragging && 'opacity-60 shadow-lg ring-2 ring-primary/20',
       )}
       style={style}
