@@ -35,12 +35,14 @@ export function SortableTaskCard({ task, onEdit, onDelete }: SortableTaskCardPro
       data-task-id={task.id}
       data-card-index={task.position}
       className={cn(
+        'cursor-grab touch-none active:cursor-grabbing',
         isDragging && 'rounded-card bg-foreground/10 ring-1 ring-inset ring-foreground/10',
       )}
       style={{
-        transform: isDragging ? undefined : CSS.Transform.toString(transform),
+        transform: isDragging ? undefined : CSS.Translate.toString(transform),
         transition: isDragging ? undefined : transition,
       }}
+      {...listeners}
     >
       <div className={cn(isDragging && 'invisible')}>
         <TaskCard
@@ -52,10 +54,9 @@ export function SortableTaskCard({ task, onEdit, onDelete }: SortableTaskCardPro
               type="button"
               className={cn(
                 buttonVariants({ variant: 'ghost', size: 'icon' }),
-                'size-8 shrink-0 cursor-grab touch-none active:cursor-grabbing',
+                'size-8 shrink-0 cursor-grab active:translate-y-0 active:cursor-grabbing',
               )}
               {...attributes}
-              {...listeners}
               ref={setActivatorNodeRef}
               aria-label={`Move ${task.title}`}
               aria-describedby={BOARD_DND_INSTRUCTIONS_ID}

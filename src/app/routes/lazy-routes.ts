@@ -10,11 +10,6 @@ export const LazyListView = lazy(async () => {
   return { default: module.ListView }
 })
 
-export const LazyTaskDialogsHost = lazy(async () => {
-  const module = await import('@/features/tasks/components/TaskDialogsHost.tsx')
-  return { default: module.TaskDialogsHost }
-})
-
 export const LazyAnalyticsView = lazy(async () => {
   const module = await import('@/features/analytics/views/AnalyticsView.tsx')
   return { default: module.AnalyticsView }

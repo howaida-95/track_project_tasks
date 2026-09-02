@@ -4,6 +4,7 @@ import {
   KeyboardSensor,
   MeasuringStrategy,
   PointerSensor,
+  getClientRect,
   useSensor,
   useSensors,
   type CollisionDetection,
@@ -13,7 +14,9 @@ import {
   type UniqueIdentifier,
 } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
+import { GripVerticalIcon } from 'lucide-react'
 import { useCallback, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 import {
   BOARD_DND_INSTRUCTIONS_ID,
@@ -277,8 +280,15 @@ export function BoardView() {
           <DndContext
             sensors={sensors}
             collisionDetection={collisionDetection}
+            autoScroll={{
+              layoutShiftCompensation: false,
+            }}
             measuring={{
+              draggable: {
+                measure: getClientRect,
+              },
               droppable: {
+                measure: getClientRect,
                 strategy: MeasuringStrategy.Always,
               },
             }}
@@ -315,13 +325,25 @@ export function BoardView() {
               })}
             </div>
 
-            <DragOverlay dropAnimation={null}>
-              {activeTask ? (
-                <div className="rotate-2 cursor-grabbing shadow-lg">
-                  <TaskCard task={activeTask} onEdit={handleEdit} onDelete={handleDelete} />
-                </div>
-              ) : null}
-            </DragOverlay>
+            {createPortal(
+              <DragOverlay dropAnimation={null} className="cursor-grabbing">
+                {activeTask ? (
+                  <div className="shadow-lg">
+                    <TaskCard
+                      task={activeTask}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      dragHandle={
+                        <span className="flex size-8 shrink-0 items-center justify-center text-muted-foreground">
+                          <GripVerticalIcon className="size-4" />
+                        </span>
+                      }
+                    />
+                  </div>
+                ) : null}
+              </DragOverlay>,
+              document.body,
+            )}
           </DndContext>
         </QueryState>
       </div>
